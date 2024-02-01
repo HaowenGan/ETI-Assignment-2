@@ -22,6 +22,13 @@ type User struct {
 	Password  string `json:"password"`
 }
 
+type Review struct {
+	UserID   int    `json:"userId"`
+	CourseID int    `json:"courseId"`
+	Rating   int    `json:"rating"`
+	Comment  string `json:"comment"`
+}
+
 // helper function to make an HTTP POST request
 func makePostRequest(url string, data []byte) error {
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
@@ -102,6 +109,48 @@ func login() {
 	}
 }
 
+// addReview function to simulate adding a review
+func addReview() {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Enter user ID: ")
+	var userID int
+	fmt.Scan(&userID)
+	fmt.Scanln() // Read the newline character left in the buffer
+
+	fmt.Print("Enter course ID: ")
+	var courseID int
+	fmt.Scan(&courseID)
+	fmt.Scanln() // Read the newline character left in the buffer
+
+	fmt.Print("Enter rating (1-5): ")
+	var rating int
+	fmt.Scan(&rating)
+	fmt.Scanln() // Read the newline character left in the buffer
+
+	fmt.Print("Enter comment: ")
+	comment, _ := reader.ReadString('\n')
+
+	review := Review{
+		UserID:   userID,
+		CourseID: courseID,
+		Rating:   rating,
+		Comment:  strings.TrimSpace(comment),
+	}
+
+	reviewJSON, err := json.Marshal(review)
+	if err != nil {
+		fmt.Println("Error encoding JSON:", err)
+		return
+	}
+
+	err = makePostRequest("http://localhost:8080/submit-review", reviewJSON)
+	if err != nil {
+		fmt.Println("Error making POST request:", err)
+		return
+	}
+}
+
 func main() {
 	var choice string
 	reader := bufio.NewReader(os.Stdin)
@@ -109,6 +158,7 @@ func main() {
 	fmt.Println("User Management Console Application")
 	fmt.Println("1. Register")
 	fmt.Println("2. Login")
+	fmt.Println("3. Add Review (Not working as of yet)")
 	fmt.Print("Enter choice: ")
 	choice, _ = reader.ReadString('\n')
 	choice = strings.TrimSpace(choice) // Trims the newline character from the input
@@ -118,6 +168,8 @@ func main() {
 		register()
 	case "2":
 		login()
+	case "3":
+		addReview()
 	default:
 		fmt.Println("Invalid choice")
 	}
