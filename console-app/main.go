@@ -1,3 +1,6 @@
+// Ong Jia Yuan / S10227735B
+// /console-app/main.go
+
 package main
 
 import (

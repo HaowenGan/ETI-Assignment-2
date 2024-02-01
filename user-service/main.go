@@ -1,3 +1,6 @@
+// Ong Jia Yuan / S10227735B
+// /user-service/main.go
+
 package main
 
 import (
@@ -5,6 +8,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -92,12 +97,29 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Sets login.html as the default page
+func serveLogin(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./front-end/login.html")
+}
+
 func main() {
 	connectDatabase()
 	defer db.Close()
+	workDir, _ := os.Getwd()
+	frontEndDir := filepath.Join(workDir, "../front-end")
 
 	router := mux.NewRouter()
-	router.HandleFunc("/register", registerUser).Methods("POST")
-	router.HandleFunc("/login", loginUser).Methods("POST")
+
+	router.PathPrefix("/front-end/").Handler(http.StripPrefix("/front-end/", http.FileServer(http.Dir(frontEndDir))))
+	// Sets login.html as default page for the root URL
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(frontEndDir, "login.html"))
+	})
+
+	// API routes
+	apiRouter := router.PathPrefix("/api").Subrouter()
+	apiRouter.HandleFunc("/register", registerUser).Methods("POST")
+	apiRouter.HandleFunc("/login", loginUser).Methods("POST")
+
 	log.Fatal(http.ListenAndServe(":5000", router))
 }
