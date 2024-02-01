@@ -23,7 +23,7 @@ type User struct {
 var db *sql.DB
 var err error
 
-// connectDatabase establishes a connection to the MySQL database
+// Establishes a connection to the MySQL database
 func connectDatabase() {
 	db, err = sql.Open("mysql", "user:password@tcp(localhost:3306)/eti_asg2")
 	if err != nil {
@@ -45,6 +45,7 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Hashing password with bcrypt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -61,11 +62,42 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+// loginUser authenticates a user
+func loginUser(w http.ResponseWriter, r *http.Request) {
+	var user User
+	var hashedPassword string
+
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = db.QueryRow("SELECT password FROM users WHERE username = ?", user.Username).Scan(&hashedPassword)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "User not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.Password))
+	if err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func main() {
 	connectDatabase()
 	defer db.Close()
 
 	router := mux.NewRouter()
 	router.HandleFunc("/register", registerUser).Methods("POST")
+	router.HandleFunc("/login", loginUser).Methods("POST")
 	log.Fatal(http.ListenAndServe(":5000", router))
 }
