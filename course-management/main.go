@@ -1,48 +1,42 @@
+// main.go
 package main
 
 import (
-	"context"
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // Course structure
 type Course struct {
-	ID       string    `json:"id,omitempty" bson:"_id,omitempty"`
-	Title    string    `json:"title,omitempty" bson:"title,omitempty"`
-	Content  string    `json:"content,omitempty" bson:"content,omitempty"`
-	Sections []Section `json:"sections,omitempty" bson:"sections,omitempty"`
+	ID       int    `json:"id,omitempty"`
+	Title    string `json:"title,omitempty"`
+	Content  string `json:"content,omitempty"`
+	Sections []Section
 }
 
 // Section structure within a course
 type Section struct {
-	Title   string `json:"title,omitempty" bson:"title,omitempty"`
-	Content string `json:"content,omitempty" bson:"content,omitempty"`
+	ID      int    `json:"id,omitempty"`
+	Title   string `json:"title,omitempty"`
+	Content string `json:"content,omitempty"`
 }
 
-var client *mongo.Client
+var db *sql.DB
 
 func main() {
-	// Initialize MongoDB connection
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	client, err := mongo.Connect(ctx, clientOptions)
+	// Initialize MySQL connection
+	var err error
+	db, err = sql.Open("mysql", "user:password@tcp(localhost:3306)/eti_asg2")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	defer db.Close()
 
 	// Initialize router
 	router := mux.NewRouter()
@@ -55,23 +49,31 @@ func main() {
 	router.HandleFunc("/courses/{id}", DeleteCourse).Methods("DELETE")
 
 	// Start HTTP server
-	log.Fatal(http.ListenAndServe(":8081", router))
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
 // GetCourses retrieves all courses
 func GetCourses(w http.ResponseWriter, r *http.Request) {
-	var courses []Course
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	cursor, err := client.Database("coursedb").Collection("courses").Find(ctx, bson.M{})
+	rows, err := db.Query("SELECT id, title, content FROM courses")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer cursor.Close(ctx)
+	defer rows.Close()
 
-	for cursor.Next(ctx) {
+	var courses []Course
+	for rows.Next() {
 		var course Course
-		cursor.Decode(&course)
+		err := rows.Scan(&course.ID, &course.Title, &course.Content)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Fetch sections for each course
+		course.Sections, err = getSections(course.ID)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		courses = append(courses, course)
 	}
 
@@ -83,12 +85,16 @@ func GetCourses(w http.ResponseWriter, r *http.Request) {
 func GetCourse(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	var course Course
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	err := client.Database("coursedb").Collection("courses").FindOne(ctx, bson.M{"_id": params["id"]}).Decode(&course)
+	err := db.QueryRow("SELECT id, title, content FROM courses WHERE id=?", params["id"]).Scan(&course.ID, &course.Title, &course.Content)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
+	}
+
+	// Fetch sections for the course
+	course.Sections, err = getSections(course.ID)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -100,16 +106,25 @@ func CreateCourse(w http.ResponseWriter, r *http.Request) {
 	var course Course
 	json.NewDecoder(r.Body).Decode(&course)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	result, err := client.Database("coursedb").Collection("courses").InsertOne(ctx, course)
+	// Insert course into the database
+	result, err := db.Exec("INSERT INTO courses(title, content) VALUES(?, ?)", course.Title, course.Content)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		log.Fatal(err)
+	}
+
+	// Get the last inserted ID
+	courseID, _ := result.LastInsertId
+
+	// Insert sections for the course if available
+	for _, section := range course.Sections {
+		_, err := db.Exec("INSERT INTO sections(course_id, title, content) VALUES(?, ?, ?)", courseID, section.Title, section.Content)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result.InsertedID)
+	json.NewEncoder(w).Encode(courseID)
 }
 
 // UpdateCourse updates an existing course by ID
@@ -118,14 +133,25 @@ func UpdateCourse(w http.ResponseWriter, r *http.Request) {
 	var updatedCourse Course
 	json.NewDecoder(r.Body).Decode(&updatedCourse)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	filter := bson.M{"_id": params["id"]}
-	update := bson.M{"$set": updatedCourse}
-	_, err := client.Database("coursedb").Collection("courses").UpdateOne(ctx, filter, update)
+	// Update course details
+	_, err := db.Exec("UPDATE courses SET title=?, content=? WHERE id=?", updatedCourse.Title, updatedCourse.Content, params["id"])
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
+	}
+
+	// Delete existing sections for the course
+	_, err = db.Exec("DELETE FROM sections WHERE course_id=?", params["id"])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Insert updated sections for the course if available
+	for _, section := range updatedCourse.Sections {
+		_, err := db.Exec("INSERT INTO sections(course_id, title, content) VALUES(?, ?, ?)", params["id"], section.Title, section.Content)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -135,13 +161,38 @@ func UpdateCourse(w http.ResponseWriter, r *http.Request) {
 func DeleteCourse(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	_, err := client.Database("coursedb").Collection("courses").DeleteOne(ctx, bson.M{"_id": params["id"]})
+	// Delete course and associated sections
+	_, err := db.Exec("DELETE FROM courses WHERE id=?", params["id"])
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
+	_, err = db.Exec("DELETE FROM sections WHERE course_id=?", params["id"])
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	w.WriteHeader(http.StatusOK)
+}
+
+// getSections retrieves sections for a specific course ID
+func getSections(courseID int) ([]Section, error) {
+	rows, err := db.Query("SELECT id, title, content FROM sections WHERE course_id=?", courseID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sections []Section
+	for rows.Next() {
+		var section Section
+		err := rows.Scan(&section.ID, &section.Title, &section.Content)
+		if err != nil {
+			return nil, err
+		}
+		sections = append(sections, section)
+	}
+
+	return sections, nil
 }
