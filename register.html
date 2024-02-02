@@ -1,0 +1,43 @@
+<!-- Ong Jia Yuan / S10227735B -->
+<!-- /register.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="register-container">
+    <!-- Placeholder for logo -->
+    <div class="logo-placeholder">Insert Logo Here</div>
+    
+    <h2>Get Started for Free</h2>
+    <p>No commitment. No credit card required.</p>
+    
+    <form id="registerForm">
+        <div class="input-group">
+            <input type="text" id="firstName" placeholder="First name" required>
+            <input type="text" id="lastName" placeholder="Last name" required>
+        </div>
+        <input type="email" id="email" placeholder="Email address" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+        <div class="password-criteria">
+            <ul>
+                <li>Must have at least 8 characters</li>
+                <li>One special character or number</li>
+            </ul>
+        </div>
+        <p></p>
+        <button type="submit">CREATE MY ACCOUNT</button>
+    </form>
+    <div class="security-notes">
+        <p>256-bit AES Encryption</p>
+        <p>Students Trained Certified</p>
+    </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

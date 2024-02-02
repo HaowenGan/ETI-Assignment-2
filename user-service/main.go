@@ -97,23 +97,24 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// Sets login.html as the default page
-func serveLogin(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./front-end/login.html")
-}
-
 func main() {
 	connectDatabase()
 	defer db.Close()
 	workDir, _ := os.Getwd()
-	frontEndDir := filepath.Join(workDir, "../front-end")
+	staticDir := filepath.Join(workDir, "../") // The parent directory now
 
 	router := mux.NewRouter()
 
-	router.PathPrefix("/front-end/").Handler(http.StripPrefix("/front-end/", http.FileServer(http.Dir(frontEndDir))))
-	// Sets login.html as default page for the root URL
+	// Serve static files from the 'front-end' directory
+	router.PathPrefix("/css/").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir(filepath.Join(staticDir, "front-end/css/")))))
+	router.PathPrefix("/js/").Handler(http.StripPrefix("/js/", http.FileServer(http.Dir(filepath.Join(staticDir, "front-end/js/")))))
+
+	// Serve HTML files directly from the root of the server
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(frontEndDir, "login.html"))
+		http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
+	})
+	router.HandleFunc("/register.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "register.html"))
 	})
 
 	// API routes

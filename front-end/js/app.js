@@ -8,12 +8,24 @@ document.addEventListener('DOMContentLoaded', function () {
     if (registerForm) {
         registerForm.onsubmit = function (e) {
             e.preventDefault();
+            var password = document.getElementById('password').value;
+            var confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Check if passwords match
+            if (password !== confirmPassword) {
+                // If passwords do not match, display an error message
+                document.getElementById('passwordMatch').style.display = 'block';
+                return false; // Stop the form from submitting
+            }
+
+            // If passwords match, proceed with the form submission
+            document.getElementById('passwordMatch').style.display = 'none';
             var formData = {
                 firstName: document.getElementById('firstName').value,
                 lastName: document.getElementById('lastName').value,
                 email: document.getElementById('email').value,
                 username: document.getElementById('username').value,
-                password: document.getElementById('password').value
+                password: password
             };
             fetch('http://localhost:5000/api/register', {
                 method: 'POST',

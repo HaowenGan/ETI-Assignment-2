@@ -1,4 +1,4 @@
-/* styles.css */
+/* /front-end/css/styles.css */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -7,26 +7,92 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f7f7f7;
+    background-color: #f0f2f5;
 }
 
-form {
-    border: 1px solid #ddd;
+.register-container {
+    width: 350px;
     padding: 20px;
-    border-radius: 5px;
     background: #fff;
+    border-radius: 5px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.logo-placeholder {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.register-container h2 {
+    margin-bottom: 5px;
+    color: #333;
+    font-weight: normal;
+}
+
+.register-container p {
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.input-group input,
+input[type="email"],
+input[type="password"] {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px;
+    width: calc(96% - 10px); /* adjust width to account for the gap */
+    margin-bottom: 10px;
+}
+
+.input-group {
+    margin-bottom: 10px;
+    display: flex;
+    gap: 10px;
 }
 
 input {
-    display: block;
-    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
     padding: 10px;
     width: 100%;
-    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+.password-criteria ul {
+    list-style-type: disc; /* or 'circle' or 'square', depending on desired bullet style */
+    padding-left: 20px; /* Adjust this value to align the bullets as needed */
+    margin: 0;
+    text-align: left;
+}
+
+.password-criteria li {
+    text-align: left;
+    font-size: 12px;
+    color: #777;
+    /* line-height: 1.4; /* Adjust line height for better readability if needed */
+    list-style-position: inside;
 }
 
 button {
+    background-color: #ff6a00;
+    color: white;
+    border: none;
+    border-radius: 4px;
     padding: 10px 15px;
     width: 100%;
     cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+button:hover {
+    background-color: #e65a00;
+}
+
+.security-notes p {
+    font-size: 10px;
+    color: #777;
+    margin-bottom: 5px;
 }
