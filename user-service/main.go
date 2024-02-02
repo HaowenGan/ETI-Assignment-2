@@ -105,11 +105,21 @@ func main() {
 
 	router := mux.NewRouter()
 
-	// Serve static files from the 'front-end' directory
-	router.PathPrefix("/css/").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir(filepath.Join(staticDir, "front-end/css/")))))
-	router.PathPrefix("/js/").Handler(http.StripPrefix("/js/", http.FileServer(http.Dir(filepath.Join(staticDir, "front-end/js/")))))
+	// Custom handler for JavaScript files to ensure the correct Content-Type
+	jsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript")
+		http.ServeFile(w, r, filepath.Join(staticDir, "front-end/js/", r.URL.Path))
+	})
+	router.PathPrefix("/js/").Handler(http.StripPrefix("/js/", jsHandler))
 
-	// Serve HTML files directly from the root of the server
+	// Custom handler for CSS files to ensure the correct Content-Type
+	cssHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/css")
+		http.ServeFile(w, r, filepath.Join(staticDir, "front-end/css/", r.URL.Path))
+	})
+	router.PathPrefix("/css/").Handler(http.StripPrefix("/css/", cssHandler))
+
+	// HTML files directly from the root of the server
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
 	})
