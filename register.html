@@ -6,7 +6,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Register</title>
-<link rel="stylesheet" href="css/styles.css">
+<script src="js/app.js" defer></script>
+<link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
 <div class="register-container">
@@ -22,15 +23,17 @@
             <input type="text" id="lastName" placeholder="Last name" required>
         </div>
         <input type="email" id="email" placeholder="Email address" required>
+        <input type="text" id="username" placeholder="Username" required>
         <input type="password" id="password" placeholder="Password" required>
         <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
         <div class="password-criteria">
             <ul>
-                <li>Must have at least 8 characters</li>
-                <li>One special character or number</li>
+                <li id="lengthRequirement">Must have at least 8 characters</li>
+                <li id="specialCharRequirement">Must contain at least one special character [!@#$..]</li>
             </ul>
         </div>
         <p></p>
+        <div id="passwordMatch" style="display: none; color: red;">Passwords do not match!</div>
         <button type="submit">CREATE MY ACCOUNT</button>
     </form>
     <div class="security-notes">
@@ -38,6 +41,6 @@
         <p>Students Trained Certified</p>
     </div>
 </div>
-<script src="js/app.js"></script>
+
 </body>
 </html>
