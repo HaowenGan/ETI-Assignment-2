@@ -94,4 +94,27 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         };
     }
+
+    // Function to log the current user's details
+    function logUserDetails() {
+        fetch('http://localhost:5000/api/current-user', {
+            method: 'GET',
+            credentials: 'include' // Ensure cookies are sent with the request
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Could not fetch user session: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(userDetails => {
+            console.log('User details:', userDetails);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    // Call the function to log the user details after successful login
+    logUserDetails();
 });

@@ -74,6 +74,7 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 func loginUser(w http.ResponseWriter, r *http.Request) {
 	var user User
 	var hashedPassword string
+	var id int
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -81,7 +82,8 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.QueryRow("SELECT password FROM users WHERE username = ?", user.Username).Scan(&hashedPassword)
+	//err = db.QueryRow("SELECT password FROM users WHERE username = ?", user.Username).Scan(&hashedPassword)
+	err = db.QueryRow("SELECT id, firstName, lastName, email, password FROM users WHERE username = ?", user.Username).Scan(&id, &user.FirstName, &user.LastName, &user.Email, &hashedPassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -97,15 +99,51 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create a new session and set the session values
-	session, _ := store.Get(r, "user-session")
-	session.Values["authenticated"] = true
-	session.Values["username"] = user.Username
-	session.Save(r, w)
+	if bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.Password)) == nil {
+		// Create a new session and set the session values
+		session, _ := store.Get(r, "user-session")
+		session.Values["authenticated"] = true
+		session.Values["username"] = user.Username
+		session.Values["firstName"] = user.FirstName
+		session.Values["lastName"] = user.LastName
+		session.Values["email"] = user.Email
+		session.Save(r, w)
 
-	// Send a response to the client that authentication was successful
-	w.Write([]byte("User logged in successfully"))
-	w.WriteHeader(http.StatusOK)
+		// Send a response to the client that authentication was successful
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("User logged in successfully"))
+	} else {
+		// Handle invalid credentials
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+}
+
+// Endpoint to get the current user's details
+func getCurrentUser(w http.ResponseWriter, r *http.Request) {
+	session, err := store.Get(r, "user-session")
+	if err != nil {
+		http.Error(w, "Could not get session", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if the user is authenticated
+	auth, ok := session.Values["authenticated"].(bool)
+	if !ok || !auth {
+		http.Error(w, "Not authenticated", http.StatusForbidden)
+		return
+	}
+
+	// Respond with the user details
+	userDetails := map[string]string{
+		"firstName": session.Values["firstName"].(string),
+		"lastName":  session.Values["lastName"].(string),
+		"email":     session.Values["email"].(string),
+		"username":  session.Values["username"].(string),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(userDetails)
 }
 
 func main() {
@@ -148,6 +186,7 @@ func main() {
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/register", registerUser).Methods("POST")
 	apiRouter.HandleFunc("/login", loginUser).Methods("POST")
+	apiRouter.HandleFunc("/current-user", getCurrentUser).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":5000", router))
 }
