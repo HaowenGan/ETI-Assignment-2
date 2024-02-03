@@ -7,8 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var registerForm = document.getElementById('registerForm');
     var loginForm = document.getElementById('loginForm');
 
-    
-
     if (registerForm) {
         // Function to check password requirements
         document.getElementById('registerPassword').addEventListener('input', function(e) {

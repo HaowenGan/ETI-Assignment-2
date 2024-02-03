@@ -13,8 +13,11 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var store = sessions.NewCookieStore([]byte("secret-key-replace-with-your-own"))
 
 // User structure
 type User struct {
@@ -94,6 +97,14 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create a new session and set the session values
+	session, _ := store.Get(r, "user-session")
+	session.Values["authenticated"] = true
+	session.Values["username"] = user.Username
+	session.Save(r, w)
+
+	// Send a response to the client that authentication was successful
+	w.Write([]byte("User logged in successfully"))
 	w.WriteHeader(http.StatusOK)
 }
 
