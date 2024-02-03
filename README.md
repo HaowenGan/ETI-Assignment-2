@@ -1,5 +1,5 @@
 # ETI-Assignment-2
-![Home Page](front-end/images/index.jpg)
+![Home Page](front-end/images/Index.jpg)
 
 ## Database Setup Instructions
 1. Run `ETI_ASG2_SQL_Setup.sql`
