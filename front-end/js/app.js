@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData),
-                credentials: 'same-origin' // Include cookies for session management
+                credentials: 'include' // Include cookies for session management
             })
             .then(response => {
                 if (response.ok) {

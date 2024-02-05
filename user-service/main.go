@@ -114,6 +114,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		// Create a new session and set the session values
 		session, _ := store.Get(r, "user-session")
 		session.Values["authenticated"] = true
+		session.Values["userID"] = id
 		session.Values["username"] = user.Username
 		session.Values["firstName"] = user.FirstName
 		session.Values["lastName"] = user.LastName
