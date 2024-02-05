@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Learning Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<style>
+  /* Custom styles for collapsible sidebar */
+  .sidebar {
+    transition: margin-left .5s;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 250px; /* Width of the sidebar when expanded */
+    overflow-x: hidden;
+    z-index: 1000;
+    border-right: 10px solid #ddd; /* Border to distinguish the sidebar */
+  }
+  #sidebarToggle {
+    transition: left .5s;
+    position: fixed;
+    left: 10px; /* Position the toggle button where the sidebar ends */
+    top: 10px; 
+    z-index: 1001; /* Ensure the toggle is above other content */
+  }
+  #content {
+    transition: margin-left .5s;
+    margin-left: 250px; /* Same as the sidebar width */
+  }
+  .sidebar-hidden {
+    margin-left: -250px;
+  }
+  .content-expanded {
+    margin-left: 0;
+  }
+</style>
+</head>
+<body class="bg-gray-100">
+
+<!-- Sidebar Toggle Button -->
+<button id="sidebarToggle" onclick="toggleSidebar()" class="bg-purple-700 text-white p-2 rounded-full"><i class="fas fa-bars"></i></button>
+
+<!-- Sidebar -->
+<div class="sidebar bg-purple-700 text-white p-4 rounded-tr-lg rounded-br-lg    ">
+    <button onclick="toggleSidebar()" class="text-white text-xl mb-4"><i class=""></i></button>
+    <div class="space-y-3">
+      <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-purple-800">Dashboard</a>
+      <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-purple-800">Courses</a>
+      <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-purple-800">Transactions</a>
+      <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-purple-800">My Reviews</a>
+      <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-purple-800">Settings</a>
+    </div>
+</div>
+
+<!-- Content -->
+<div id="content" class="bg-white p-4">
+</div>
+
+<script>
+  function toggleSidebar() {
+    var sidebar = document.querySelector('.sidebar');
+    var content = document.getElementById("content");
+    var sidebarToggle = document.getElementById("sidebarToggle");
+    
+    sidebar.classList.toggle("sidebar-hidden");
+    content.classList.toggle("content-expanded");
+    sidebarToggle.classList.toggle("sidebar-toggle-visible");
+  }
+</script>
+
+</body>
+</html>
