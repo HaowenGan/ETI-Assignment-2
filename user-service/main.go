@@ -19,6 +19,17 @@ import (
 
 var store = sessions.NewCookieStore([]byte("secret-key-replace-with-your-own"))
 
+func init() {
+	// Set SameSite and other cookie attributes here.
+	store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   86400 * 7, // 7 days
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode, // or http.SameSiteLaxMode if you want less strict settings
+		Secure:   true,                    // set to true if you're using https
+	}
+}
+
 // User structure
 type User struct {
 	FirstName string `json:"firstName"`
@@ -109,6 +120,14 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		session.Values["email"] = user.Email
 		session.Save(r, w)
 
+		// Save the session before writing to the response
+		if err := session.Save(r, w); err != nil {
+			log.Printf("Error saving session: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		log.Println("Session saved for user:", user.Username)
+
 		// Send a response to the client that authentication was successful
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("User logged in successfully"))
@@ -123,27 +142,44 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 func getCurrentUser(w http.ResponseWriter, r *http.Request) {
 	session, err := store.Get(r, "user-session")
 	if err != nil {
-		http.Error(w, "Could not get session", http.StatusInternalServerError)
+		http.Error(w, "Error retrieving session", http.StatusInternalServerError)
+		log.Printf("Error retrieving session: %v", err)
 		return
 	}
 
 	// Check if the user is authenticated
 	auth, ok := session.Values["authenticated"].(bool)
 	if !ok || !auth {
-		http.Error(w, "Not authenticated", http.StatusForbidden)
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
 	}
 
-	// Respond with the user details
-	userDetails := map[string]string{
-		"firstName": session.Values["firstName"].(string),
-		"lastName":  session.Values["lastName"].(string),
-		"email":     session.Values["email"].(string),
-		"username":  session.Values["username"].(string),
+	// Retrieve user details from the session
+	firstName, ok1 := session.Values["firstName"].(string)
+	lastName, ok2 := session.Values["lastName"].(string)
+	email, ok3 := session.Values["email"].(string)
+	username, ok4 := session.Values["username"].(string)
+
+	// If any of the type assertions failed, handle the error
+	if !ok1 || !ok2 || !ok3 || !ok4 {
+		http.Error(w, "Error retrieving user details from session", http.StatusInternalServerError)
+		return
 	}
 
+	// Create a map to hold the user details
+	userDetails := map[string]string{
+		"firstName": firstName,
+		"lastName":  lastName,
+		"email":     email,
+		"username":  username,
+	}
+
+	// Set the header and encode the userDetails map to JSON
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(userDetails)
+	if err := json.NewEncoder(w).Encode(userDetails); err != nil {
+		http.Error(w, "Error encoding user details to JSON", http.StatusInternalServerError)
+		log.Printf("Error encoding user details to JSON: %v", err)
+	}
 }
 
 func main() {
@@ -183,6 +219,9 @@ func main() {
 	})
 	router.HandleFunc("/option.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "option.html"))
+	})
+	router.HandleFunc("/dashboard.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "dashboard.html"))
 	})
 
 	// API routes
