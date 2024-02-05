@@ -20,6 +20,7 @@ type User struct {
 // Review represents a user review structure
 type Review struct {
 	ID       int    `json:"id"`
+	Username string `json:"username"`
 	UserID   int    `json:"userId"`
 	CourseID int    `json:"courseId"`
 	Rating   int    `json:"rating"`
@@ -51,9 +52,9 @@ func SubmitReviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the user exists and get the user ID
+	// Check if the user exists and get the user ID based on the username
 	var user User
-	err = db.QueryRow("SELECT id FROM users WHERE id = ?", newReview.UserID).Scan(&user.ID)
+	err = db.QueryRow("SELECT id FROM users WHERE username = ?", newReview.Username).Scan(&user.ID)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "User not found", http.StatusInternalServerError)
@@ -61,8 +62,8 @@ func SubmitReviewHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert the new review into the database
-	result, err := db.Exec("INSERT INTO reviews (user_id, course_id, rating, comment) VALUES (?, ?, ?, ?)",
-		newReview.UserID, newReview.CourseID, newReview.Rating, newReview.Comment)
+	result, err := db.Exec("INSERT INTO reviews (user_id, username, course_id, rating, comment) VALUES (?, ?, ?, ?, ?)",
+		user.ID, newReview.Username, newReview.CourseID, newReview.Rating, newReview.Comment)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Failed to submit review", http.StatusInternalServerError)
@@ -91,8 +92,8 @@ func main() {
 	// Initialize the Gorilla Mux router
 	router := mux.NewRouter()
 
-	// Define routes
-	router.HandleFunc("/submit-review", SubmitReviewHandler).Methods("POST")
+	apiRouter := router.PathPrefix("/api").Subrouter()
+	apiRouter.HandleFunc("/submit-review", SubmitReviewHandler).Methods("POST")
 
 	// Start the server
 	fmt.Println("Server is running on :8080")

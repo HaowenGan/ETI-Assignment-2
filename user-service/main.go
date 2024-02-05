@@ -181,6 +181,9 @@ func main() {
 	router.HandleFunc("/login.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "login.html"))
 	})
+	router.HandleFunc("/option.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "option.html"))
+	})
 
 	// API routes
 	apiRouter := router.PathPrefix("/api").Subrouter()

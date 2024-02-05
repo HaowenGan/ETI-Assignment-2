@@ -24,6 +24,7 @@ type User struct {
 
 type Review struct {
 	UserID   int    `json:"userId"`
+	Username string `json:"username"`
 	CourseID int    `json:"courseId"`
 	Rating   int    `json:"rating"`
 	Comment  string `json:"comment"`
@@ -113,9 +114,9 @@ func login() {
 func addReview() {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Print("Enter user ID: ")
-	var userID int
-	fmt.Scan(&userID)
+	fmt.Print("Enter Username: ")
+	var username string
+	fmt.Scan(&username)
 	fmt.Scanln() // Read the newline character left in the buffer
 
 	fmt.Print("Enter course ID: ")
@@ -132,7 +133,7 @@ func addReview() {
 	comment, _ := reader.ReadString('\n')
 
 	review := Review{
-		UserID:   userID,
+		Username: username,
 		CourseID: courseID,
 		Rating:   rating,
 		Comment:  strings.TrimSpace(comment),
@@ -144,7 +145,7 @@ func addReview() {
 		return
 	}
 
-	err = makePostRequest("http://localhost:8080/submit-review", reviewJSON)
+	err = makePostRequest("http://localhost:8080/api/submit-review", reviewJSON)
 	if err != nil {
 		fmt.Println("Error making POST request:", err)
 		return
