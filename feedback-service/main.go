@@ -241,44 +241,45 @@ func DeleteReviewHandler(w http.ResponseWriter, r *http.Request) {
 func GetReviewsHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := store.Get(r, "user-session")
 	if err != nil || session.IsNew {
+		log.Println("Session error or new session:", err)
 		http.Error(w, "Unauthorized - Session not found", http.StatusUnauthorized)
 		return
 	}
 
-	// Get the user ID from the session
+	// Assuming userID is stored as an integer
 	userID, ok := session.Values["userID"].(int)
-	if !ok {
+	if !ok || userID == 0 {
+		log.Printf("Session user ID not found or is zero, found: %v", session.Values["userID"])
 		http.Error(w, "Session does not contain user ID", http.StatusInternalServerError)
 		return
 	}
 
-	// Fetch reviews by the user from the database
 	rows, err := db.Query("SELECT id, course_id, rating, comment FROM reviews WHERE user_id=?", userID)
 	if err != nil {
-		log.Println(err)
+		log.Printf("Database query error: %v", err)
 		http.Error(w, "Failed to fetch reviews", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	// Create a slice to store the retrieved reviews
-	reviews := []Review{}
-
-	// Iterate through the result set and populate the reviews slice
+	var reviews []Review
 	for rows.Next() {
 		var review Review
-		err := rows.Scan(&review.ID, &review.CourseID, &review.Rating, &review.Comment)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, "Failed to scan review data", http.StatusInternalServerError)
-			return
+		if err := rows.Scan(&review.ID, &review.CourseID, &review.Rating, &review.Comment); err != nil {
+			log.Printf("Error scanning review: %v", err)
+			continue // Optionally, handle the error as you prefer
 		}
 		reviews = append(reviews, review)
 	}
 
-	// Respond with the retrieved reviews
+	log.Printf("Retrieved userID from session: %d", userID)
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(reviews)
+	if err := json.NewEncoder(w).Encode(reviews); err != nil {
+		log.Printf("Error encoding reviews: %v", err)
+		http.Error(w, "Failed to encode reviews", http.StatusInternalServerError)
+	}
 }
 
 func main() {

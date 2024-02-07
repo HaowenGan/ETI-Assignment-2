@@ -134,6 +134,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Println("Session saved for user:", user.Username)
 
+		log.Printf("Session saved with userID: %d", id)
 		// Send a response to the client that authentication was successful
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("User logged in successfully"))

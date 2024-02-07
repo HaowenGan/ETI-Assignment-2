@@ -14,6 +14,7 @@ function updateUserDetailsInNavBar(userDetails) {
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM fully loaded and parsed');
+    
 
     // Only run the authentication check on pages other than 'login.html' and 'register.html'.
     if (!['/login.html', '/register.html', '/', '/index.html'].includes(window.location.pathname)) {
@@ -228,23 +229,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Fetch reviews from the API and populate the table
     fetch('http://localhost:5001/api/get-reviews', {
-    method: 'GET',
-    credentials: 'same-origin', // Ensure cookies are sent with the request
-})
-    .then(response => response.json())
+        method: 'GET',
+        credentials: 'include', // Ensure cookies are sent with the request
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        } else if (!response.headers.get("content-type")?.includes("application/json")) {
+            throw new Error("Not a JSON response");
+        }
+        return response.json();
+    })
     .then(reviews => {
         console.log(reviews);
         const tableBody = document.querySelector('#reviewsTable tbody');
 
         reviews.forEach(review => {
+            console.log(review); // Log the review object to inspect its properties
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${review.ID}</td>
-                <td>${review.CourseID}</td>
-                <td>${review.Rating}</td>
-                <td>${review.Comment}</td>
-                <td><button onclick="editReview(${review.ID})">Edit</button></td>
-                <td><button onclick="deleteReview(${review.ID})">Delete</button></td>
+                <td>${review.id}</td>
+                <td>${review.courseId}</td>
+                <td>${review.rating}</td>
+                <td>${review.comment}</td>
+                <td><button onclick="editReview(${review.id})">Edit</button></td>
+                <td><button onclick="deleteReview(${review.id})">Delete</button></td>
             `;
             tableBody.appendChild(row);
         });
