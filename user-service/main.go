@@ -37,6 +37,7 @@ type User struct {
 	Email     string `json:"email"`
 	Username  string `json:"username"`
 	Password  string `json:"password"`
+	Usertype  string `json:"usertype"`
 }
 
 var db *sql.DB
@@ -64,6 +65,9 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Explicitly set Usertype to "student"
+	user.Usertype = "student"
+
 	// Hashing password with bcrypt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -71,8 +75,8 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Exec("INSERT INTO users(firstName, lastName, email, username, password) VALUES(?, ?, ?, ?, ?)",
-		user.FirstName, user.LastName, user.Email, user.Username, string(hashedPassword))
+	_, err = db.Exec("INSERT INTO users(firstName, lastName, email, username, password, usertype) VALUES(?, ?, ?, ?, ?, ?)",
+		user.FirstName, user.LastName, user.Email, user.Username, string(hashedPassword), user.Usertype)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -94,7 +98,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//err = db.QueryRow("SELECT password FROM users WHERE username = ?", user.Username).Scan(&hashedPassword)
-	err = db.QueryRow("SELECT id, firstName, lastName, email, password FROM users WHERE username = ?", user.Username).Scan(&id, &user.FirstName, &user.LastName, &user.Email, &hashedPassword)
+	err = db.QueryRow("SELECT id, firstName, lastName, email, password, usertype FROM users WHERE username = ?", user.Username).Scan(&id, &user.FirstName, &user.LastName, &user.Email, &hashedPassword, &user.Usertype)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -119,6 +123,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		session.Values["firstName"] = user.FirstName
 		session.Values["lastName"] = user.LastName
 		session.Values["email"] = user.Email
+		session.Values["usertype"] = user.Usertype
 		session.Save(r, w)
 
 		// Save the session before writing to the response
@@ -160,9 +165,10 @@ func getCurrentUser(w http.ResponseWriter, r *http.Request) {
 	lastName, ok2 := session.Values["lastName"].(string)
 	email, ok3 := session.Values["email"].(string)
 	username, ok4 := session.Values["username"].(string)
+	usertype, ok5 := session.Values["usertype"].(string)
 
 	// If any of the type assertions failed, handle the error
-	if !ok1 || !ok2 || !ok3 || !ok4 {
+	if !ok1 || !ok2 || !ok3 || !ok4 || !ok5 {
 		http.Error(w, "Error retrieving user details from session", http.StatusInternalServerError)
 		return
 	}
@@ -173,6 +179,7 @@ func getCurrentUser(w http.ResponseWriter, r *http.Request) {
 		"lastName":  lastName,
 		"email":     email,
 		"username":  username,
+		"usertype":  usertype,
 	}
 
 	// Set the header and encode the userDetails map to JSON

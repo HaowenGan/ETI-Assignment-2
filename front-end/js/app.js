@@ -1,9 +1,33 @@
 // Ong Jia Yuan / S10227735B
 // /front-end/js/app.js
 
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM fully loaded and parsed');
-    
+
+    // Only run the authentication check on pages other than 'login.html' and 'register.html'.
+    if (!['/login.html', '/register.html', '/', '/index.html'].includes(window.location.pathname)) {
+        console.log('Checking user authentication status...');
+        fetch('http://localhost:5000/api/current-user', {
+            method: 'GET',
+            credentials: 'include' // Ensure cookies are sent with the request.
+        })
+        .then(response => {
+            if (response.status === 401) {
+                alert("Please login to view this page!");
+
+                window.location.href = 'login.html';
+            } else if (!response.ok) {
+                // Other HTTP errors
+                throw new Error('Network response was not ok.');
+            }
+            return response.json(); // If authorized, proceed to handle the response.
+        })
+        .catch(error => {
+            console.error('There has been a problem with your fetch operation:', error);
+        });
+    }
+
     var registerForm = document.getElementById('registerForm');
     var loginForm = document.getElementById('loginForm');
     var reviewForm = document.getElementById('reviewForm');
@@ -151,8 +175,6 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Error:', error);
         });
     }
-
-    
 
     // Call the function to log the user details after successful login
     logUserDetails();
