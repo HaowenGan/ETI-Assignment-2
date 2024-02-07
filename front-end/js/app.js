@@ -48,30 +48,52 @@ document.addEventListener('DOMContentLoaded', function () {
     var reviewForm = document.getElementById('reviewForm');
 
     if (registerForm) {
-        // Function to check password requirements
-        document.getElementById('registerPassword').addEventListener('input', function(e) {
+        var registerPassword = document.getElementById('registerPassword');
+        var lengthRequirement = document.getElementById('lengthRequirement');
+        var specialCharRequirement = document.getElementById('specialCharRequirement');
+        var confirmPassword = document.getElementById('confirmPassword');
+        var passwordMatchElement = document.getElementById('passwordMatch');
+
+        // Check if all elements exist
+        if (!registerPassword || !lengthRequirement || !specialCharRequirement || !confirmPassword || !passwordMatchElement) {
+            console.error('One or more elements do not exist in the DOM.');
+            return; // Stop the execution if elements are missing
+        }
+
+        registerPassword.addEventListener('input', function (e) {
             var value = e.target.value;
             var lengthRequirementMet = value.length >= 8;
             var specialCharRequirementMet = /[!@#$%^&*(),.?":{}]/.test(value);
 
-            document.getElementById('lengthRequirement').classList.toggle('requirement-met', lengthRequirementMet);
-            document.getElementById('specialCharRequirement').classList.toggle('requirement-met', specialCharRequirementMet);
+            lengthRequirement.classList.toggle('requirement-met', lengthRequirementMet);
+            specialCharRequirement.classList.toggle('requirement-met', specialCharRequirementMet);
         });
+
         registerForm.onsubmit = function (e) {
             e.preventDefault();
 
-            var password = document.getElementById('registerPassword').value;
-            var confirmPassword = document.getElementById('confirmPassword').value;
+            var password = registerPassword.value;
+            var confirmPasswordValue = confirmPassword.value;
+            var errors = [];
 
-            // Check if passwords match
-            var passwordMatchElement = document.getElementById('passwordMatch');
-            if (passwordMatchElement) {
-                if (password !== confirmPassword) {
-                    passwordMatchElement.style.display = 'block';
-                    return false; // Stop the form from submitting
-                } else {
-                    passwordMatchElement.style.display = 'none';
-                }
+            // Check password requirements and accumulate error messages
+            if (password.length < 8) {
+                errors.push("Password must be at least 8 characters long.");
+            }
+            if (!/[!@#$%^&*(),.?":{}]/.test(password)) {
+                errors.push("Password must contain at least one special character.");
+            }
+            if (password !== confirmPasswordValue) {
+                errors.push("Passwords do not match.");
+                passwordMatchElement.style.display = 'block'; // Show the password match error
+            } else {
+                passwordMatchElement.style.display = 'none'; // Hide the password match error
+            }
+
+            // If there are any errors, show an alert and stop form submission
+            if (errors.length > 0) {
+                alert("Please correct the following errors before submitting:\n\n" + errors.join("\n"));
+                return; // Stop the form from submitting
             }
 
             // If passwords match, proceed with the form submission
