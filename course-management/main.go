@@ -14,10 +14,11 @@ import (
 
 // Course structure
 type Course struct {
-	ID       int    `json:"id,omitempty"`
-	Title    string `json:"title,omitempty"`
-	Content  string `json:"content,omitempty"`
-	Sections []Section
+	ID       int      `json:"id,omitempty"`
+	Title    string   `json:"title,omitempty"`
+	Content  string   `json:"content,omitempty"`
+	Price    float64  `json:"price,omitempty"`
+	Sections []Section `json:"sections,omitempty"`
 }
 
 // Section structure within a course
@@ -103,28 +104,41 @@ func GetCourse(w http.ResponseWriter, r *http.Request) {
 
 // CreateCourse creates a new course
 func CreateCourse(w http.ResponseWriter, r *http.Request) {
-	var course Course
-	json.NewDecoder(r.Body).Decode(&course)
+    var course Course
+    if err := json.NewDecoder(r.Body).Decode(&course); err != nil {
+        log.Printf("Error decoding JSON request: %v", err)
+        w.WriteHeader(http.StatusBadRequest)
+        return
+    }
 
-	// Insert course into the database
-	result, err := db.Exec("INSERT INTO courses(title, content) VALUES(?, ?)", course.Title, course.Content)
-	if err != nil {
-		log.Fatal(err)
-	}
+    // Insert course into the database
+    result, err := db.Exec("INSERT INTO courses(title, content, price) VALUES(?, ?, ?)", course.Title, course.Content, course.Price)
+    if err != nil {
+        log.Printf("Error inserting course into the database: %v", err)
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
 
-	// Get the last inserted ID
-	courseID, _ := result.LastInsertId
+    // Get the last inserted ID
+    courseID, err := result.LastInsertId()
+    if err != nil {
+        log.Printf("Error retrieving last inserted ID: %v", err)
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
 
-	// Insert sections for the course if available
-	for _, section := range course.Sections {
-		_, err := db.Exec("INSERT INTO sections(course_id, title, content) VALUES(?, ?, ?)", courseID, section.Title, section.Content)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+    // Insert sections for the course if available
+    for _, section := range course.Sections {
+        _, err := db.Exec("INSERT INTO sections(course_id, title, content) VALUES(?, ?, ?)", courseID, section.Title, section.Content)
+        if err != nil {
+            log.Printf("Error inserting section into the database: %v", err)
+            w.WriteHeader(http.StatusInternalServerError)
+            return
+        }
+    }
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(courseID)
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(courseID)
 }
 
 // UpdateCourse updates an existing course by ID
@@ -134,7 +148,7 @@ func UpdateCourse(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&updatedCourse)
 
 	// Update course details
-	_, err := db.Exec("UPDATE courses SET title=?, content=? WHERE id=?", updatedCourse.Title, updatedCourse.Content, params["id"])
+	_, err := db.Exec("UPDATE courses SET title=?, content=?, price=? WHERE id=?", updatedCourse.Title, updatedCourse.Content, updatedCourse.Price, params["id"])
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return

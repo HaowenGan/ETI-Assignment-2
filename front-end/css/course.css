@@ -42,3 +42,17 @@ hr {
     border: 0;
     border-top: 1px solid #ccc;
 }
+.course-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.course-table th, .course-table td {
+    border: 1px solid #dddddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.course-table th {
+    background-color: #f2f2f2;
+}

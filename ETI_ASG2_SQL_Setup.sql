@@ -31,8 +31,9 @@ CREATE TABLE reviews (
 
 CREATE TABLE courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255),
-    content TEXT
+    title VARCHAR(255) NOT NULL UNIQUE,
+    content TEXT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL
 );
 
 CREATE TABLE sections (
