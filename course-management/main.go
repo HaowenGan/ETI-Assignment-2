@@ -14,10 +14,11 @@ import (
 
 // Course structure
 type Course struct {
-	ID       int    `json:"id,omitempty"`
-	Title    string `json:"title,omitempty"`
-	Content  string `json:"content,omitempty"`
-	Sections []Section
+	ID       int      `json:"id,omitempty"`
+	Title    string   `json:"title,omitempty"`
+	Content  string   `json:"content,omitempty"`
+	Price    float64  `json:"price,omitempty"`
+	Sections []Section `json:"sections,omitempty"`
 }
 
 // Section structure within a course
@@ -41,6 +42,8 @@ func main() {
 	// Initialize router
 	router := mux.NewRouter()
 
+	router.Use(checkUserType)
+
 	// Define API endpoints
 	router.HandleFunc("/courses", GetCourses).Methods("GET")
 	router.HandleFunc("/courses/{id}", GetCourse).Methods("GET")
@@ -54,31 +57,27 @@ func main() {
 
 // GetCourses retrieves all courses
 func GetCourses(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, title, content FROM courses")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
+    rows, err := db.Query("SELECT id, title, content, price FROM courses ORDER BY price DESC")
+    if err != nil {
+        log.Printf("Error querying courses from the database: %v", err)
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
 
-	var courses []Course
-	for rows.Next() {
-		var course Course
-		err := rows.Scan(&course.ID, &course.Title, &course.Content)
-		if err != nil {
-			log.Fatal(err)
-		}
+    var courses []Course
+    for rows.Next() {
+        var course Course
+        if err := rows.Scan(&course.ID, &course.Title, &course.Content, &course.Price); err != nil {
+            log.Printf("Error scanning course rows: %v", err)
+            w.WriteHeader(http.StatusInternalServerError)
+            return
+        }
+        courses = append(courses, course)
+    }
 
-		// Fetch sections for each course
-		course.Sections, err = getSections(course.ID)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		courses = append(courses, course)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(courses)
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(courses)
 }
 
 // GetCourse retrieves a specific course by ID
@@ -103,28 +102,41 @@ func GetCourse(w http.ResponseWriter, r *http.Request) {
 
 // CreateCourse creates a new course
 func CreateCourse(w http.ResponseWriter, r *http.Request) {
-	var course Course
-	json.NewDecoder(r.Body).Decode(&course)
+    var course Course
+    if err := json.NewDecoder(r.Body).Decode(&course); err != nil {
+        log.Printf("Error decoding JSON request: %v", err)
+        w.WriteHeader(http.StatusBadRequest)
+        return
+    }
 
-	// Insert course into the database
-	result, err := db.Exec("INSERT INTO courses(title, content) VALUES(?, ?)", course.Title, course.Content)
-	if err != nil {
-		log.Fatal(err)
-	}
+    // Insert course into the database
+    result, err := db.Exec("INSERT INTO courses(title, content, price) VALUES(?, ?, ?)", course.Title, course.Content, course.Price)
+    if err != nil {
+        log.Printf("Error inserting course into the database: %v", err)
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
 
-	// Get the last inserted ID
-	courseID, _ := result.LastInsertId
+    // Get the last inserted ID
+    courseID, err := result.LastInsertId()
+    if err != nil {
+        log.Printf("Error retrieving last inserted ID: %v", err)
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
 
-	// Insert sections for the course if available
-	for _, section := range course.Sections {
-		_, err := db.Exec("INSERT INTO sections(course_id, title, content) VALUES(?, ?, ?)", courseID, section.Title, section.Content)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+    // Insert sections for the course if available
+    for _, section := range course.Sections {
+        _, err := db.Exec("INSERT INTO sections(course_id, title, content) VALUES(?, ?, ?)", courseID, section.Title, section.Content)
+        if err != nil {
+            log.Printf("Error inserting section into the database: %v", err)
+            w.WriteHeader(http.StatusInternalServerError)
+            return
+        }
+    }
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(courseID)
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(courseID)
 }
 
 // UpdateCourse updates an existing course by ID
@@ -134,7 +146,7 @@ func UpdateCourse(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&updatedCourse)
 
 	// Update course details
-	_, err := db.Exec("UPDATE courses SET title=?, content=? WHERE id=?", updatedCourse.Title, updatedCourse.Content, params["id"])
+	_, err := db.Exec("UPDATE courses SET title=?, content=?, price=? WHERE id=?", updatedCourse.Title, updatedCourse.Content, updatedCourse.Price, params["id"])
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -195,4 +207,29 @@ func getSections(courseID int) ([]Section, error) {
 	}
 
 	return sections, nil
+}
+
+func checkUserType(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Assuming you have some way to extract user type from the request or session
+		// Here, we assume the user type is stored in the request header as "User-Type"
+		userType := r.Header.Get("User-Type")
+
+		// Check user type and allow or deny access accordingly
+		if userType == "admin" {
+			// Admins can access everything, continue to the next handler
+			next.ServeHTTP(w, r)
+		} else if userType == "student" {
+			// Students can only access the list of courses
+			if r.Method == http.MethodGet && r.URL.Path == "/courses" {
+				next.ServeHTTP(w, r)
+			} else {
+				w.WriteHeader(http.StatusForbidden)
+				fmt.Fprintln(w, "Access denied. Students can only view the list of courses.")
+			}
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprintln(w, "Unauthorized access.")
+		}
+	})
 }

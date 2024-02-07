@@ -1,9 +1,48 @@
 // Ong Jia Yuan / S10227735B
 // /front-end/js/app.js
 
+// Function to update user details in the navigation bar
+function updateUserDetailsInNavBar(userDetails) {
+    // Find the elements in the DOM
+    const userNameSpan = document.querySelector('#userMenuButton .user-name');
+    const userTypeSpan = document.querySelector('#userMenuButton .user-type');
+
+    // Set the inner text of the elements to the user details
+    if (userNameSpan) userNameSpan.textContent = userDetails.firstName + ' ' + userDetails.lastName;
+    if (userTypeSpan) userTypeSpan.textContent = userDetails.usertype.charAt(0).toUpperCase() + userDetails.usertype.slice(1);
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM fully loaded and parsed');
     
+
+    // Only run the authentication check on pages other than 'login.html' and 'register.html'.
+    if (!['/login.html', '/register.html', '/', '/index.html'].includes(window.location.pathname)) {
+        console.log('Checking user authentication status...');
+        fetch('http://localhost:5000/api/current-user', {
+            method: 'GET',
+            credentials: 'include' // Ensure cookies are sent with the request.
+        })
+        .then(response => {
+            if (response.status === 401) {
+                alert("Please login to view this page!");
+
+                window.location.href = 'login.html';
+            } else if (!response.ok) {
+                // Other HTTP errors
+                throw new Error('Network response was not ok.');
+            }
+            return response.json(); // If authorized, proceed to handle the response.
+        })
+        .then(userDetails => {
+            // Now that we have the user details, update the navigation bar
+            updateUserDetailsInNavBar(userDetails);
+        })
+        .catch(error => {
+            console.error('There has been a problem with your fetch operation:', error);
+        });
+    }
+
     var registerForm = document.getElementById('registerForm');
     var loginForm = document.getElementById('loginForm');
     var reviewForm = document.getElementById('reviewForm');
@@ -99,14 +138,22 @@ document.addEventListener('DOMContentLoaded', function () {
     if (reviewForm) {
         reviewForm.onsubmit = function (e) {
             e.preventDefault();
+            
+            var selectedRating = document.querySelector('input[name="rating"]:checked');
+    
+            if (!selectedRating) {
+                alert('Please select a rating before submitting the review.');
+                return;
+            }
+    
             var formData = {
                 // No need to get the username from session, it will be handled server-side
                 courseId: parseInt(document.getElementById('courseId').value),
-                rating: parseInt(document.getElementById('rating').value),
+                rating: parseInt(selectedRating.value),
                 comment: document.getElementById('comment').value
             };
-            
-            fetch('http://localhost:8080/api/submit-review', {
+    
+            fetch('http://localhost:5001/api/submit-review', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -124,11 +171,36 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 alert('Review submitted successfully');
                 console.log(data);
+                window.location.href = 'ViewReviews.html';
             })
             .catch(error => {
                 console.error('Error submitting review:', error);
             });
         };
+    }
+
+    // Find the logout button by ID or class and add an event listener
+    var logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            fetch('http://localhost:5000/api/logout', {
+                method: 'POST',
+                credentials: 'include' // Necessary to include the session cookie
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Redirect to login page or display a message
+                    alert("Successfully logged out! Redirecting to Login page.");
+                    window.location.href = 'login.html';
+                } else {
+                    throw new Error('Logout failed.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
     }
 
     // Function to log the current user's details
@@ -152,8 +224,134 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    
 
     // Call the function to log the user details after successful login
     logUserDetails();
+
+    // Fetch reviews from the API and populate the table
+    fetch('http://localhost:5001/api/get-reviews', {
+        method: 'GET',
+        credentials: 'include', // Ensure cookies are sent with the request
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        } else if (!response.headers.get("content-type")?.includes("application/json")) {
+            throw new Error("Not a JSON response");
+        }
+        return response.json();
+    })
+    .then(reviews => {
+        console.log(reviews);
+        const tableBody = document.querySelector('#reviewsTable tbody');
+
+        reviews.forEach(review => {
+            console.log(review); // Log the review object to inspect its properties
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${review.id}</td>
+                <td>${review.courseId}</td>
+                <td>${review.rating}</td>
+                <td>${review.comment}</td>
+                <td><button onclick="editReview(${review.id})">Edit</button></td>
+                <td><button onclick="deleteReview(${review.id})">Delete</button></td>
+            `;
+            tableBody.appendChild(row);
+        });
+    })
+    .catch(error => console.error('Error fetching reviews:', error));
 });
+
+// Define the deleteReview function
+function deleteReview(reviewId) {
+    // Make a DELETE request to the API with the reviewId
+    fetch(`http://localhost:5001/api/delete-review/${reviewId}`, {
+        method: 'DELETE',
+        credentials: 'include', // Ensure cookies are sent with the request
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // Assuming successful deletion, you might want to handle it based on your requirements
+        console.log(`Review with ID ${reviewId} deleted successfully`);
+
+         // Show a pop-up indicating successful deletion
+         window.alert('Review deleted successfully');
+        
+         // Reload the page after deletion
+         window.location.reload();
+
+        // You can call your fetchReviews function here or update the UI accordingly
+    })
+    .catch(error => console.error('Error deleting review:', error));
+}
+
+// Function to handle editReview button click
+function editReview(reviewid) {
+    // Redirect to the edit-review.html page with the review ID
+    window.location.href = `EditReview.html?id=${reviewid}`;
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const reviewidString = urlParams.get('id');
+const reviewid = parseInt(reviewidString, 10);
+
+// Fetch the existing review details based on the review ID
+fetch(`http://localhost:5001/api/get-review/${reviewid}`, {
+    method: 'GET',
+    credentials: 'include', // Ensure cookies are sent with the request
+})
+.then(response => {
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    } else if (!response.headers.get("content-type")?.includes("application/json")) {
+        throw new Error("Not a JSON response");
+    }
+    return response.json();
+})
+.then(review => {
+    // Populate the textarea with the existing comment
+    document.getElementById('editedComment').value = review.comment;
+})
+.catch(error => console.error('Error fetching review details:', error));
+
+
+// Function to save the edited review
+function saveEditedReview() {
+    const editedComment = document.getElementById('editedComment').value;
+    const selectedRating = document.querySelector('input[name="rating"]:checked');
+
+    if (!selectedRating) {
+        console.error('Please select a rating');
+        return;
+    }
+
+    const ratingValue = parseInt(selectedRating.value, 10); // Convert to integer
+    console.log(reviewid)
+
+    // Make a PATCH request to update the review's comment and rating
+    fetch(`http://localhost:5001/api/edit-review/${reviewid}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Ensure cookies are sent with the request
+        body: JSON.stringify({
+            Id: reviewid,
+            comment: editedComment,
+            rating: ratingValue,
+        }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // Assuming successful update, you might want to handle it based on your requirements
+        console.log('Review updated successfully');
+        alert("Review Updated Successfully!")
+        window.location.href = `ViewReviews.html`
+        // Redirect back to the main reviews page or handle navigation as needed
+    })
+    .catch(error => console.error('Error updating review:', error));
+}
