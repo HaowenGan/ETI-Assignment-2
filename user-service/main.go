@@ -251,14 +251,21 @@ func main() {
 	router.HandleFunc("/login.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "login.html"))
 	})
-	router.HandleFunc("/MakeReview.html", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(staticDir, "MakeReview.html"))
-	})
 	router.HandleFunc("/dashboard.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "dashboard.html"))
 	})
-	router.HandleFunc("/courses.html", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(staticDir, "courses.html"))
+
+	// User related
+	router.HandleFunc("/profile.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "profile.html"))
+	})
+	router.HandleFunc("/settings.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "settings.html"))
+	})
+
+	// Review related
+	router.HandleFunc("/MakeReview.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "MakeReview.html"))
 	})
 	router.HandleFunc("/ViewReviews.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "ViewReviews.html"))
@@ -266,9 +273,13 @@ func main() {
 	router.HandleFunc("/EditReview.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "EditReview.html"))
 	})
-	router.HandleFunc("/profile.html", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(staticDir, "profile.html"))
+
+	// Courses related
+	router.HandleFunc("/courses.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "courses.html"))
 	})
+
+	// Payment related
 
 	// API routes
 	apiRouter := router.PathPrefix("/api").Subrouter()
