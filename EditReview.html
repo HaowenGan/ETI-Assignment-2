@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/app.js"></script>
+    <title>Edit Review</title>
+</head>
+<body>
+
+<h1>Edit Review</h1>
+
+<label for="editedComment">Edited Comment:</label>
+<textarea id="editedComment"></textarea>
+
+<p>Select Rating:</p>
+<div>
+    <input type="radio" id="rating1" name="rating" value="1">
+    <label for="rating1">1 Star</label>
+
+    <input type="radio" id="rating2" name="rating" value="2">
+    <label for="rating2">2 Stars</label>
+
+    <input type="radio" id="rating3" name="rating" value="3">
+    <label for="rating3">3 Stars</label>
+
+    <input type="radio" id="rating4" name="rating" value="4">
+    <label for="rating4">4 Stars</label>
+
+    <input type="radio" id="rating5" name="rating" value="5">
+    <label for="rating5">5 Stars</label>
+</div>
+
+<button onclick="saveEditedReview()">Save Changes</button>
+
+</body>
+</html>

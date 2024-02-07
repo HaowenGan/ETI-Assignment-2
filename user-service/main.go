@@ -263,6 +263,9 @@ func main() {
 	router.HandleFunc("/ViewReviews.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "ViewReviews.html"))
 	})
+	router.HandleFunc("/EditReview.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "EditReview.html"))
+	})
 
 	// API routes
 	apiRouter := router.PathPrefix("/api").Subrouter()
