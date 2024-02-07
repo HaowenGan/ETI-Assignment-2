@@ -12,6 +12,17 @@ function updateUserDetailsInNavBar(userDetails) {
     if (userTypeSpan) userTypeSpan.textContent = userDetails.usertype.charAt(0).toUpperCase() + userDetails.usertype.slice(1);
 }
 
+// Function to update user details in the main content area
+function updateUserDetailsInMainContent(userDetails) {
+    // Assuming your HTML structure and class names, target the elements for user's name and user type
+    const userNameElement = document.querySelector('#main-content .text-2xl.font-semibold');
+    const userTypeElement = document.querySelector('#main-content .text-gray-600');
+
+    // Update the text content of these elements with userDetails
+    if (userNameElement) userNameElement.textContent = userDetails.firstName + ' ' + userDetails.lastName;
+    if (userTypeElement) userTypeElement.textContent = userDetails.usertype.charAt(0).toUpperCase() + userDetails.usertype.slice(1); // Capitalize the first letter
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM fully loaded and parsed');
     
@@ -37,6 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(userDetails => {
             // Now that we have the user details, update the navigation bar
             updateUserDetailsInNavBar(userDetails);
+            updateUserDetailsInMainContent(userDetails);
         })
         .catch(error => {
             console.error('There has been a problem with your fetch operation:', error);
