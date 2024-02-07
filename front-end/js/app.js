@@ -137,13 +137,21 @@ document.addEventListener('DOMContentLoaded', function () {
     if (reviewForm) {
         reviewForm.onsubmit = function (e) {
             e.preventDefault();
+            
+            var selectedRating = document.querySelector('input[name="rating"]:checked');
+    
+            if (!selectedRating) {
+                alert('Please select a rating before submitting the review.');
+                return;
+            }
+    
             var formData = {
                 // No need to get the username from session, it will be handled server-side
                 courseId: parseInt(document.getElementById('courseId').value),
-                rating: parseInt(document.getElementById('rating').value),
+                rating: parseInt(selectedRating.value),
                 comment: document.getElementById('comment').value
             };
-            
+    
             fetch('http://localhost:8080/api/submit-review', {
                 method: 'POST',
                 headers: {

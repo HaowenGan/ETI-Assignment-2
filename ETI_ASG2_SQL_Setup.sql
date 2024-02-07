@@ -16,12 +16,14 @@ CREATE TABLE users (
 
 CREATE TABLE reviews (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
     user_id INT,
     course_id INT,
     rating INT,
     comment TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (username) REFERENCES users(username)
     -- Add additional foreign key references as needed
     -- For example: FOREIGN KEY (course_id) REFERENCES courses(id),
     -- Make sure to create the 'courses' table if it doesn't exist
