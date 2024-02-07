@@ -57,31 +57,27 @@ func main() {
 
 // GetCourses retrieves all courses
 func GetCourses(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, title, content FROM courses")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
+    rows, err := db.Query("SELECT id, title, content, price FROM courses ORDER BY price DESC")
+    if err != nil {
+        log.Printf("Error querying courses from the database: %v", err)
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
 
-	var courses []Course
-	for rows.Next() {
-		var course Course
-		err := rows.Scan(&course.ID, &course.Title, &course.Content)
-		if err != nil {
-			log.Fatal(err)
-		}
+    var courses []Course
+    for rows.Next() {
+        var course Course
+        if err := rows.Scan(&course.ID, &course.Title, &course.Content, &course.Price); err != nil {
+            log.Printf("Error scanning course rows: %v", err)
+            w.WriteHeader(http.StatusInternalServerError)
+            return
+        }
+        courses = append(courses, course)
+    }
 
-		// Fetch sections for each course
-		course.Sections, err = getSections(course.ID)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		courses = append(courses, course)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(courses)
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(courses)
 }
 
 // GetCourse retrieves a specific course by ID

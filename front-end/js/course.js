@@ -98,7 +98,7 @@ function listCourses() {
     fetch('http://localhost:8080/courses', {
         method: 'GET',
         headers: {
-            'User-Type': 'student', // Replace with actual user type
+            'User-Type': 'student', 
         },
         credentials: 'same-origin', // Ensure cookies are sent with the request
     })
@@ -111,6 +111,9 @@ function listCourses() {
     .then(data => {
         const courseListBody = document.getElementById('courseListBody');
         courseListBody.innerHTML = '';
+
+        // Sort courses in descending order based on price
+        data.sort((a, b) => b.Price - a.Price);
 
         data.forEach(course => {
             const row = document.createElement('tr');
