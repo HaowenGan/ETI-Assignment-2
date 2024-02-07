@@ -144,27 +144,27 @@ func EditReviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the username from the session
-	username, ok := session.Values["username"].(string)
-	if !ok {
-		http.Error(w, "Session does not contain username", http.StatusInternalServerError)
+	// Retrieve the existing review from the database to check the user ID
+	var existingReview Review
+	err = db.QueryRow("SELECT user_id FROM reviews WHERE id=?", updatedReview.ID).Scan(&existingReview.UserID)
+	if err != nil {
+		log.Println("Database error:", err)
+		log.Printf("Review ID to update: %d\n", updatedReview.ID)
+		http.Error(w, "Failed to retrieve existing review", http.StatusInternalServerError)
 		return
 	}
 
 	// Check if the user is authorized to edit the review
-	if userID != updatedReview.UserID || username != updatedReview.Username {
-		http.Error(w, "Unauthorized - User does not have permission to edit this review", http.StatusUnauthorized)
+	if userID != existingReview.UserID {
+		http.Error(w, "Unauthorized - User cannot edit this review", http.StatusUnauthorized)
 		return
 	}
 
-	// Check if the user is authorized to edit the review (you may want to add additional checks)
-	// For example, ensuring that the user is the author of the review.
-
 	// Update the review in the database
-	_, err = db.Exec("UPDATE reviews SET rating=?, comment=? WHERE id=? AND user_id=?",
-		updatedReview.Rating, updatedReview.Comment, updatedReview.ID, userID)
+	_, err = db.Exec("UPDATE reviews SET rating=?, comment=? WHERE id=?",
+		updatedReview.Rating, updatedReview.Comment, updatedReview.ID)
 	if err != nil {
-		log.Println(err)
+		log.Println("Database error:", err)
 		http.Error(w, "Failed to update review", http.StatusInternalServerError)
 		return
 	}
@@ -282,6 +282,56 @@ func GetReviewsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetReviewByIDHandler handles the retrieval of a single review by its ID
+func GetReviewByIDHandler(w http.ResponseWriter, r *http.Request) {
+	// Get the review ID from the request parameters
+	session, err := store.Get(r, "user-session")
+	if err != nil || session.IsNew {
+		http.Error(w, "Unauthorized - Session not found", http.StatusUnauthorized)
+		return
+	}
+
+	userID, ok := session.Values["userID"].(int)
+	if !ok || userID == 0 {
+		log.Printf("Session user ID not found or is zero, found: %v", session.Values["userID"])
+		http.Error(w, "Session does not contain user ID", http.StatusInternalServerError)
+		return
+	}
+	log.Printf("Retrieved userID from session: %d", userID)
+
+	params := mux.Vars(r)
+	reviewID, ok := params["id"]
+	if !ok {
+		http.Error(w, "Review ID not provided in the request", http.StatusBadRequest)
+		return
+	}
+
+	// Convert the review ID to an integer
+	reviewIDInt, err := strconv.Atoi(reviewID)
+	if err != nil {
+		http.Error(w, "Invalid Review ID", http.StatusBadRequest)
+		return
+	}
+
+	// Query the database to fetch the review details by its ID
+	var review Review
+	err = db.QueryRow("SELECT id, user_id, username, course_id, rating, comment FROM reviews WHERE id=?", reviewIDInt).
+		Scan(&review.ID, &review.UserID, &review.Username, &review.CourseID, &review.Rating, &review.Comment)
+	if err != nil {
+		log.Printf("Error fetching review details: %v", err)
+		http.Error(w, "Failed to fetch review details", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the fetched review
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(review); err != nil {
+		log.Printf("Error encoding review details: %v", err)
+		http.Error(w, "Failed to encode review details", http.StatusInternalServerError)
+	}
+}
+
 func main() {
 	// Initialize the database connection
 	initDB()
@@ -294,9 +344,10 @@ func main() {
 
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/submit-review", SubmitReviewHandler).Methods("POST")
-	apiRouter.HandleFunc("/edit-review", EditReviewHandler).Methods("PATCH")
+	apiRouter.HandleFunc("/edit-review/{id:[0-9]+}", EditReviewHandler).Methods("PATCH")
 	apiRouter.HandleFunc("/delete-review/{id:[0-9]+}", DeleteReviewHandler).Methods("DELETE")
 	apiRouter.HandleFunc("/get-reviews", GetReviewsHandler).Methods("GET")
+	apiRouter.HandleFunc("/get-review/{id:[0-9]+}", GetReviewByIDHandler).Methods("GET")
 
 	// Start the server
 	fmt.Println("Server is running on :5001")

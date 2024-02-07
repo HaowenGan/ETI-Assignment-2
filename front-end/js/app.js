@@ -171,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 alert('Review submitted successfully');
                 console.log(data);
+                window.location.href = 'ViewReviews.html';
             })
             .catch(error => {
                 console.error('Error submitting review:', error);
@@ -260,3 +261,97 @@ document.addEventListener('DOMContentLoaded', function () {
     })
     .catch(error => console.error('Error fetching reviews:', error));
 });
+
+// Define the deleteReview function
+function deleteReview(reviewId) {
+    // Make a DELETE request to the API with the reviewId
+    fetch(`http://localhost:5001/api/delete-review/${reviewId}`, {
+        method: 'DELETE',
+        credentials: 'include', // Ensure cookies are sent with the request
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // Assuming successful deletion, you might want to handle it based on your requirements
+        console.log(`Review with ID ${reviewId} deleted successfully`);
+
+         // Show a pop-up indicating successful deletion
+         window.alert('Review deleted successfully');
+        
+         // Reload the page after deletion
+         window.location.reload();
+
+        // You can call your fetchReviews function here or update the UI accordingly
+    })
+    .catch(error => console.error('Error deleting review:', error));
+}
+
+// Function to handle editReview button click
+function editReview(reviewid) {
+    // Redirect to the edit-review.html page with the review ID
+    window.location.href = `EditReview.html?id=${reviewid}`;
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const reviewidString = urlParams.get('id');
+const reviewid = parseInt(reviewidString, 10);
+
+// Fetch the existing review details based on the review ID
+fetch(`http://localhost:5001/api/get-review/${reviewid}`, {
+    method: 'GET',
+    credentials: 'include', // Ensure cookies are sent with the request
+})
+.then(response => {
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    } else if (!response.headers.get("content-type")?.includes("application/json")) {
+        throw new Error("Not a JSON response");
+    }
+    return response.json();
+})
+.then(review => {
+    // Populate the textarea with the existing comment
+    document.getElementById('editedComment').value = review.comment;
+})
+.catch(error => console.error('Error fetching review details:', error));
+
+
+// Function to save the edited review
+function saveEditedReview() {
+    const editedComment = document.getElementById('editedComment').value;
+    const selectedRating = document.querySelector('input[name="rating"]:checked');
+
+    if (!selectedRating) {
+        console.error('Please select a rating');
+        return;
+    }
+
+    const ratingValue = parseInt(selectedRating.value, 10); // Convert to integer
+    console.log(reviewid)
+
+    // Make a PATCH request to update the review's comment and rating
+    fetch(`http://localhost:5001/api/edit-review/${reviewid}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Ensure cookies are sent with the request
+        body: JSON.stringify({
+            Id: reviewid,
+            comment: editedComment,
+            rating: ratingValue,
+        }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // Assuming successful update, you might want to handle it based on your requirements
+        console.log('Review updated successfully');
+        alert("Review Updated Successfully!")
+        window.location.href = `ViewReviews.html`
+        // Redirect back to the main reviews page or handle navigation as needed
+    })
+    .catch(error => console.error('Error updating review:', error));
+}

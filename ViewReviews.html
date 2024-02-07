@@ -4,43 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="js/app.js"></script>
+    <link rel="stylesheet" href="/css/reviews.css">
     <title>User Reviews</title>
     <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+    
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+    
         table {
             border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
+            width: 80%; /* Adjust the width as needed */
+            margin: 20px auto; /* Center the table */
         }
-
+    
         table, th, td {
             border: 1px solid black;
         }
-
+    
         th, td {
             padding: 10px;
             text-align: left;
         }
+    
+        .review-button:hover {
+            background-color: #45a049;
+        }
+    
+        .back-button2:hover {
+            background-color: #222;
+        }
+    
+        .back-button2 {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+        }
+    
+        .review-button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+        }
     </style>
+    
 </head>
 <body>
 
 <h1>User Reviews</h1>
 
-<table id="reviewsTable">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Course ID</th>
-            <th>Rating</th>
-            <th>Comment</th>
-            <th></th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        <!-- Reviews will be dynamically added here -->
-    </tbody>
-</table>
+<div class="table-container">
+    <table id="reviewsTable">
+        <thead>
+            <tr class="review-dialog">
+                <th>ID</th>
+                <th>Course ID</th>
+                <th>Rating</th>
+                <th>Comment</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Reviews will be dynamically added here -->
+        </tbody>
+    </table>
 
+    <div class="button-container">
+        <!-- Button to go back to dashboard.html -->
+        <button class="back-button2" onclick="window.location.href = 'dashboard.html';">Go Back to Dashboard</button>
+
+        <!-- Button to navigate to the make review page -->
+        <button class="review-button" onclick="window.location.href = 'MakeReview.html';">Make a Review</button>
+    </div>
+</div>
 </body>
 </html>
