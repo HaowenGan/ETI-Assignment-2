@@ -177,6 +177,30 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
+    // Find the logout button by ID or class and add an event listener
+    var logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            fetch('http://localhost:5000/api/logout', {
+                method: 'POST',
+                credentials: 'include' // Necessary to include the session cookie
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Redirect to login page or display a message
+                    alert("Successfully logged out! Redirecting to Login page.");
+                    window.location.href = 'login.html';
+                } else {
+                    throw new Error('Logout failed.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    }
+
     // Function to log the current user's details
     function logUserDetails() {
         fetch('http://localhost:5000/api/current-user', {
