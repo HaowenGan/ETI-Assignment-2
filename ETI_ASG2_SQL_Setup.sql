@@ -8,7 +8,8 @@ CREATE TABLE users (
     lastName VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     username VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    usertype VARCHAR(255) DEFAULT 'student'
 );
 
 
