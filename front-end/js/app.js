@@ -171,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 alert('Review submitted successfully');
                 console.log(data);
+                window.location.href = 'ViewReviews.html';
             })
             .catch(error => {
                 console.error('Error submitting review:', error);
@@ -348,6 +349,8 @@ function saveEditedReview() {
         }
         // Assuming successful update, you might want to handle it based on your requirements
         console.log('Review updated successfully');
+        alert("Review Updated Successfully!")
+        window.location.href = `ViewReviews.html`
         // Redirect back to the main reviews page or handle navigation as needed
     })
     .catch(error => console.error('Error updating review:', error));
