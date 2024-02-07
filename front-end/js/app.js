@@ -148,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     window.location.href = '/dashboard.html';
                 } else {
                     // Handle HTTP errors
+                    alert('Invalid credentials. Please check if you have entered the correct credentials.');
                     throw new Error(`Server responded with status: ${response.status}`);
                 }
             })
