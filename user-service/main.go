@@ -190,6 +190,31 @@ func getCurrentUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// logoutUser logs a user out by destroying the session
+func logoutUser(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "user-session")
+
+	// Revoke users authentication
+	session.Values["authenticated"] = false
+	delete(session.Values, "userID")
+	delete(session.Values, "username")
+	delete(session.Values, "firstName")
+	delete(session.Values, "lastName")
+	delete(session.Values, "email")
+	delete(session.Values, "usertype")
+
+	session.Options.MaxAge = -1 // Immediately delete the session
+
+	err := session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("User logged out successfully"))
+}
+
 func main() {
 	connectDatabase()
 	defer db.Close()
@@ -231,6 +256,9 @@ func main() {
 	router.HandleFunc("/dashboard.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "dashboard.html"))
 	})
+	router.HandleFunc("/Courses.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "Courses.html"))
+	})
 	router.HandleFunc("/ViewReviews.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "ViewReviews.html"))
 	})
@@ -240,6 +268,7 @@ func main() {
 	apiRouter.HandleFunc("/register", registerUser).Methods("POST")
 	apiRouter.HandleFunc("/login", loginUser).Methods("POST")
 	apiRouter.HandleFunc("/current-user", getCurrentUser).Methods("GET")
+	apiRouter.HandleFunc("/logout", logoutUser).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":5000", router))
 }

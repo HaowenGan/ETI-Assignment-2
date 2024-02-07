@@ -76,8 +76,6 @@
 <!-- Top Navigation Bar -->
 <div class="top-nav">
   <div class="menu-btn">
-    <!-- Sidebar Toggle Button -->
-    <button id="sidebarToggle" onclick="toggleSidebar()" class="text-lg text-white p-2 rounded-full"><i class="fas fa-bars"></i></button>
   </div>
   
   <div class="profile-dropdown">
@@ -94,11 +92,14 @@
       <div class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden" role="menu" aria-orientation="vertical" aria-labelledby="userMenuButton">
         <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Your Profile</a>
         <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Settings</a>
-        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Sign out</a>
+        <a href="#" id="logoutButton" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Sign out</a>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Sidebar Toggle Button -->
+<button id="sidebarToggle" onclick="toggleSidebar()" class="bg-purple-700 text-white p-2 rounded-tr-lg rounded-br-lg"><i class="fas fa-bars"></i></button>
 
 <!-- Sidebar -->
 <div class="sidebar bg-purple-700 text-white p-4 rounded-tr-lg rounded-br-lg    ">

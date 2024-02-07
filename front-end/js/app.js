@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 comment: document.getElementById('comment').value
             };
     
-            fetch('http://localhost:8080/api/submit-review', {
+            fetch('http://localhost:5001/api/submit-review', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -175,6 +175,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Error submitting review:', error);
             });
         };
+    }
+
+    // Find the logout button by ID or class and add an event listener
+    var logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            fetch('http://localhost:5000/api/logout', {
+                method: 'POST',
+                credentials: 'include' // Necessary to include the session cookie
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Redirect to login page or display a message
+                    alert("Successfully logged out! Redirecting to Login page.");
+                    window.location.href = 'login.html';
+                } else {
+                    throw new Error('Logout failed.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
     }
 
     // Function to log the current user's details
@@ -203,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function () {
     logUserDetails();
 
     // Fetch reviews from the API and populate the table
-    fetch('http://localhost:8080/api/get-reviews', {
+    fetch('http://localhost:5001/api/get-reviews', {
     method: 'GET',
     credentials: 'same-origin', // Ensure cookies are sent with the request
 })

@@ -298,6 +298,6 @@ func main() {
 	apiRouter.HandleFunc("/get-reviews", GetReviewsHandler).Methods("GET")
 
 	// Start the server
-	fmt.Println("Server is running on :8080")
-	http.ListenAndServe(":8080", handlerWithCORS)
+	fmt.Println("Server is running on :5001")
+	http.ListenAndServe(":5001", handlerWithCORS)
 }
