@@ -23,7 +23,7 @@ func enableCORS(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5000") // allow requests from your front-end
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PATCH")
 
 		// If it's a preflight OPTIONS request, send a 200 response
 		if r.Method == "OPTIONS" {
@@ -238,6 +238,49 @@ func DeleteReviewHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Review with ID %d deleted successfully", reviewIDInt)
 }
 
+func GetReviewsHandler(w http.ResponseWriter, r *http.Request) {
+	session, err := store.Get(r, "user-session")
+	if err != nil || session.IsNew {
+		http.Error(w, "Unauthorized - Session not found", http.StatusUnauthorized)
+		return
+	}
+
+	// Get the user ID from the session
+	userID, ok := session.Values["userID"].(int)
+	if !ok {
+		http.Error(w, "Session does not contain user ID", http.StatusInternalServerError)
+		return
+	}
+
+	// Fetch reviews by the user from the database
+	rows, err := db.Query("SELECT id, course_id, rating, comment FROM reviews WHERE user_id=?", userID)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Failed to fetch reviews", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Create a slice to store the retrieved reviews
+	reviews := []Review{}
+
+	// Iterate through the result set and populate the reviews slice
+	for rows.Next() {
+		var review Review
+		err := rows.Scan(&review.ID, &review.CourseID, &review.Rating, &review.Comment)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Failed to scan review data", http.StatusInternalServerError)
+			return
+		}
+		reviews = append(reviews, review)
+	}
+
+	// Respond with the retrieved reviews
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(reviews)
+}
+
 func main() {
 	// Initialize the database connection
 	initDB()
@@ -250,8 +293,9 @@ func main() {
 
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/submit-review", SubmitReviewHandler).Methods("POST")
-	apiRouter.HandleFunc("/edit-review", EditReviewHandler).Methods("PUT")
+	apiRouter.HandleFunc("/edit-review", EditReviewHandler).Methods("PATCH")
 	apiRouter.HandleFunc("/delete-review/{id:[0-9]+}", DeleteReviewHandler).Methods("DELETE")
+	apiRouter.HandleFunc("/get-reviews", GetReviewsHandler).Methods("GET")
 
 	// Start the server
 	fmt.Println("Server is running on :8080")

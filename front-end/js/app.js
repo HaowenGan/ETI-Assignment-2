@@ -201,4 +201,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Call the function to log the user details after successful login
     logUserDetails();
+
+    // Fetch reviews from the API and populate the table
+    fetch('http://localhost:8080/api/get-reviews', {
+    method: 'GET',
+    credentials: 'same-origin', // Ensure cookies are sent with the request
+})
+    .then(response => response.json())
+    .then(reviews => {
+        console.log(reviews);
+        const tableBody = document.querySelector('#reviewsTable tbody');
+
+        reviews.forEach(review => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${review.ID}</td>
+                <td>${review.CourseID}</td>
+                <td>${review.Rating}</td>
+                <td>${review.Comment}</td>
+                <td><button onclick="editReview(${review.ID})">Edit</button></td>
+                <td><button onclick="deleteReview(${review.ID})">Delete</button></td>
+            `;
+            tableBody.appendChild(row);
+        });
+    })
+    .catch(error => console.error('Error fetching reviews:', error));
 });
