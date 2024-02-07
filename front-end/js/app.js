@@ -295,6 +295,109 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     })
     .catch(error => console.error('Error fetching reviews:', error));
+
+    // Find the profile update form by its ID or class (assuming the form has an id="profileUpdateForm")
+    var profileUpdateForm = document.getElementById('profileUpdateForm');
+
+    if (profileUpdateForm) {
+        profileUpdateForm.onsubmit = function(e) {
+            e.preventDefault(); // Prevent the default form submission
+    
+            // Object to hold formData
+            var formData = {};
+    
+            // Add only non-empty fields to formData
+            if (document.getElementById('first-name').value) formData.firstName = document.getElementById('first-name').value;
+            if (document.getElementById('last-name').value) formData.lastName = document.getElementById('last-name').value;
+            if (document.getElementById('email').value) formData.email = document.getElementById('email').value;
+    
+            // Send AJAX request with formData
+            fetch('http://localhost:5000/api/update-profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData),
+                credentials: 'include' // Include cookies for session management
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Profile changed successfully! Logging out to reflect the changes.");
+                    return fetch('http://localhost:5000/api/logout', {
+                        method: 'POST',
+                        credentials: 'include' // Include cookies for session management
+                    });
+                } else {
+                    alert("Failed to update profile. Please try again.");
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Redirect to login page or show success message
+                    window.location.href = 'login.html';
+                } else {
+                    // handle error
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        };
+    }
+
+    var passwordChangeForm = document.getElementById('passwordChangeForm');
+
+    if (passwordChangeForm) {
+        passwordChangeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Validate the new passwords match
+            var newPassword = document.getElementById('new-password').value;
+            var confirmNewPassword = document.getElementById('confirm-new-password').value;
+
+            if (newPassword !== confirmNewPassword) {
+                alert("New passwords do not match.");
+                return;
+            }
+
+            var currentPassword = document.getElementById('current-password').value;
+
+            // Send AJAX request to the backend to update the password
+            fetch('http://localhost:5000/api/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    currentPassword: currentPassword,
+                    newPassword: newPassword
+                }),
+                credentials: 'include' // Include cookies for session management
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Password updated successfully! Logging out for security reasons.");
+                    return fetch('http://localhost:5000/api/logout', {
+                        method: 'POST',
+                        credentials: 'include' // Include cookies for session management
+                    });
+                } else {
+                    // handle error
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Redirect to login page or show success message
+                    window.location.href = 'login.html';
+                } else {
+                    // handle error
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    }
 });
 
 // Define the deleteReview function
@@ -390,3 +493,5 @@ function saveEditedReview() {
     })
     .catch(error => console.error('Error updating review:', error));
 }
+
+
