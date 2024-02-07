@@ -1,6 +1,16 @@
 // Ong Jia Yuan / S10227735B
 // /front-end/js/app.js
 
+// Function to update user details in the navigation bar
+function updateUserDetailsInNavBar(userDetails) {
+    // Find the elements in the DOM
+    const userNameSpan = document.querySelector('#userMenuButton .user-name');
+    const userTypeSpan = document.querySelector('#userMenuButton .user-type');
+
+    // Set the inner text of the elements to the user details
+    if (userNameSpan) userNameSpan.textContent = userDetails.firstName + ' ' + userDetails.lastName;
+    if (userTypeSpan) userTypeSpan.textContent = userDetails.usertype.charAt(0).toUpperCase() + userDetails.usertype.slice(1);
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM fully loaded and parsed');
@@ -22,6 +32,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error('Network response was not ok.');
             }
             return response.json(); // If authorized, proceed to handle the response.
+        })
+        .then(userDetails => {
+            // Now that we have the user details, update the navigation bar
+            updateUserDetailsInNavBar(userDetails);
         })
         .catch(error => {
             console.error('There has been a problem with your fetch operation:', error);
@@ -175,6 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Error:', error);
         });
     }
+
 
     // Call the function to log the user details after successful login
     logUserDetails();

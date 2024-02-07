@@ -8,6 +8,33 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 <style>
+  .top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    display: flex;
+    justify-content: space-between; /* This separates left menu button and the profile dropdown */
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+  }
+  .top-nav .menu-btn {
+    flex-shrink: 0; /* Prevent the button from shrinking */
+  }
+  .top-nav .profile-dropdown {
+    flex-grow: 1; /* This will push the profile to the right */
+    display: flex;
+    justify-content: flex-end; /* Aligns the profile dropdown to the right */
+  }
+  .top-nav .profile-dropdown {
+    flex-grow: 1;
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 1rem; /* Add space to the right */
+  }
   /* Custom styles for collapsible sidebar */
   .sidebar {
     transition: margin-left .5s;
@@ -19,6 +46,11 @@
     overflow-x: hidden;
     z-index: 1000;
     border-right: 10px solid #ddd; /* Border to distinguish the sidebar */
+  }
+  .main-content {
+    margin-top: 4rem; /* Height of the top navigation bar */
+    margin-left: 16rem; /* Adjust width as per design of the sidebar */
+    transition: margin-left .5s;
   }
   #sidebarToggle {
     transition: left .5s;
@@ -41,8 +73,32 @@
 </head>
 <body class="bg-gray-100">
 
-<!-- Sidebar Toggle Button -->
-<button id="sidebarToggle" onclick="toggleSidebar()" class="bg-purple-700 text-white p-2 rounded-full"><i class="fas fa-bars"></i></button>
+<!-- Top Navigation Bar -->
+<div class="top-nav">
+  <div class="menu-btn">
+    <!-- Sidebar Toggle Button -->
+    <button id="sidebarToggle" onclick="toggleSidebar()" class="text-lg text-white p-2 rounded-full"><i class="fas fa-bars"></i></button>
+  </div>
+  
+  <div class="profile-dropdown">
+    <!-- User Profile Dropdown -->
+    <div class="relative">
+      <button class="flex items-center space-x-2 cursor-pointer" id="userMenuButton" aria-expanded="true" aria-haspopup="true">
+        <img src="https://placehold.co/32x32" alt="User profile placeholder image" class="rounded-full">
+        <span class="user-name text-gray-700">User</span>
+        <span class="user-type text-gray-500">Admin</span>
+        <i class="fas fa-chevron-down text-gray-500"></i>
+      </button>
+
+      <!-- Dropdown menu, hidden by default -->
+      <div class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden" role="menu" aria-orientation="vertical" aria-labelledby="userMenuButton">
+        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Your Profile</a>
+        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Settings</a>
+        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Sign out</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Sidebar -->
 <div class="sidebar bg-purple-700 text-white p-4 rounded-tr-lg rounded-br-lg    ">
@@ -70,6 +126,21 @@
     content.classList.toggle("content-expanded");
     sidebarToggle.classList.toggle("sidebar-toggle-visible");
   }
+  
+  // Script for handling dropdown
+  document.getElementById('userMenuButton').addEventListener('click', function(event) {
+    this.nextElementSibling.classList.toggle('hidden');
+    event.stopPropagation();
+  });
+
+  document.addEventListener('click', function(event) {
+    var dropdownMenus = document.querySelectorAll('.relative .absolute');
+    dropdownMenus.forEach(function(menu) {
+      if (event.target !== menu && !menu.contains(event.target)) {
+        menu.classList.add('hidden');
+      }
+    });
+  });
 </script>
 
 </body>
