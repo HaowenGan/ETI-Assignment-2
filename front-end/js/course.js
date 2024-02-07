@@ -95,20 +95,76 @@ function deleteCourse() {
     });
 }
 function listCourses() {
-    fetch('http://localhost:8080/courses')
-        .then(response => response.json())
-        .then(data => {
-            const courseListBody = document.getElementById('courseListBody');
-            courseListBody.innerHTML = '';
+    fetch('http://localhost:8080/courses', {
+        method: 'GET',
+        headers: {
+            'User-Type': 'student', // Replace with actual user type
+        },
+        credentials: 'same-origin', // Ensure cookies are sent with the request
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Could not fetch courses: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        const courseListBody = document.getElementById('courseListBody');
+        courseListBody.innerHTML = '';
 
-            data.forEach(course => {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td>${course.ID}</td><td>${course.Title}</td><td>${course.Content}</td><td>${course.Price}</td>`;
-                courseListBody.appendChild(row);
-            });
-        })
-        .catch(error => {
-            console.error('Error:', error);
+        data.forEach(course => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${course.ID}</td><td>${course.Title}</td><td>${course.Content}</td><td>${course.Price}</td>`;
+            courseListBody.appendChild(row);
         });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
 }
+
+function showHideElements(userType) {
+    const createForm = document.getElementById("createCourseForm");
+    const updateForm = document.getElementById("updateCourseForm");
+    const deleteForm = document.getElementById("deleteCourseForm");
+
+    if (userType === "admin") {
+        // Show all forms for admins
+        createForm.style.display = "block";
+        updateForm.style.display = "block";
+        deleteForm.style.display = "block";
+    } else if (userType === "student") {
+        // Hide update and delete forms for students
+        createForm.style.display = "none";
+        updateForm.style.display = "none";
+        deleteForm.style.display = "none";
+    } else {
+        // Handle other user types or unauthorized access
+        alert("Unauthorized access.");
+        window.location.href = "/login"; // Redirect to login page or handle as needed
+    }
+}
+
+function logUserDetails() {
+    fetch('http://localhost:5000/api/current-user', {
+        method: 'GET',
+        credentials: 'same-origin',
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Could not fetch user session: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(userDetails => {
+        console.log('User details:', userDetails);
+        showHideElements(userDetails.usertype);
+        return userDetails; // Return the userDetails for further use
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+logUserDetails();
 listCourses();
