@@ -42,6 +42,8 @@ func main() {
 	// Initialize router
 	router := mux.NewRouter()
 
+	router.Use(checkUserType)
+
 	// Define API endpoints
 	router.HandleFunc("/courses", GetCourses).Methods("GET")
 	router.HandleFunc("/courses/{id}", GetCourse).Methods("GET")
@@ -209,4 +211,29 @@ func getSections(courseID int) ([]Section, error) {
 	}
 
 	return sections, nil
+}
+
+func checkUserType(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Assuming you have some way to extract user type from the request or session
+		// Here, we assume the user type is stored in the request header as "User-Type"
+		userType := r.Header.Get("User-Type")
+
+		// Check user type and allow or deny access accordingly
+		if userType == "admin" {
+			// Admins can access everything, continue to the next handler
+			next.ServeHTTP(w, r)
+		} else if userType == "student" {
+			// Students can only access the list of courses
+			if r.Method == http.MethodGet && r.URL.Path == "/courses" {
+				next.ServeHTTP(w, r)
+			} else {
+				w.WriteHeader(http.StatusForbidden)
+				fmt.Fprintln(w, "Access denied. Students can only view the list of courses.")
+			}
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprintln(w, "Unauthorized access.")
+		}
+	})
 }
