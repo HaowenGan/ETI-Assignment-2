@@ -89,8 +89,14 @@ func SubmitReviewHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert the new review into the database
-	result, err := db.Exec("INSERT INTO reviews (user_id, course_id, rating, comment) VALUES (?, ?, ?, ?)",
-		userID, newReview.CourseID, newReview.Rating, newReview.Comment)
+	userName, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Session does not contain username", http.StatusInternalServerError)
+		return
+	}
+
+	result, err := db.Exec("INSERT INTO reviews (user_id, username, course_id, rating, comment) VALUES (?, ?, ?, ?, ?)",
+		userID, userName, newReview.CourseID, newReview.Rating, newReview.Comment)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Failed to submit review", http.StatusInternalServerError)
@@ -106,6 +112,7 @@ func SubmitReviewHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	newReview.ID = int(lastInsertID)
 	newReview.UserID = userID // Ensure the review struct reflects the correct userID
+	newReview.Username = userName
 
 	// Respond with the created review
 	w.WriteHeader(http.StatusCreated)
