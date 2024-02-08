@@ -257,6 +257,10 @@ func main() {
 		http.ServeFile(w, r, filepath.Join(staticDir, "dashboard.html"))
 	})
 
+	router.HandleFunc("/payment.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "payment.html"))
+	})
+
 	// API routes
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/register", registerUser).Methods("POST")
