@@ -420,6 +420,9 @@ func main() {
 	})
 
 	// Payment related
+	router.HandleFunc("/payment.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "payment.html"))
+	})
 
 	// API routes
 	apiRouter := router.PathPrefix("/api").Subrouter()
