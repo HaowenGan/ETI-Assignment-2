@@ -44,8 +44,8 @@ func main() {
 	http.HandleFunc("/enroll", enrollCurrentUser) // Change handler to enrollCurrentUser
 	http.HandleFunc("/user/", getUserCourses)
 
-	fmt.Println("Server is running on port 5000...")
-	log.Fatal(http.ListenAndServe(":5000", nil))
+	fmt.Println("Server is running on port 6000...")
+	log.Fatal(http.ListenAndServe(":6000", nil))
 }
 
 // enrollCurrentUser enrolls the current logged-in user into a course
