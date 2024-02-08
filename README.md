@@ -23,5 +23,8 @@ The platform follows a microservices architecture to enhance scalability, mainta
 4. **Course Management Service:** Manages course content, including creation, updates, and version control.
 5. **Enrollment Service:** Facilitates user enrollment in courses and ensures a smooth enrollment workflow.
 
+### Architecture Diagram
+![diagram6](https://github.com/HaowenGan/ETI-Assignment-2/assets/93901846/54386943-1166-4cf9-8769-56d3a5fb62de)
+This is the envisioned end result of the E-Learning Platform where the front-end webpage would be able to interact with the API gateway and access the different microservices based on the user's needs, the microservices are containerized in their individual containers and is managed by a kubernetes cluster to automate the deployment process, making it easier to roll out updates and manage containerized applications. Additionally kubernetes also provides self-healing, if a container fails, Kubernetes automatically replaces or reschedules containers to maintain the desired state, enhancing application resilience. These microservices would be reading and writing information to a MYSQL database.
 
 
