@@ -57,6 +57,7 @@ var db *sql.DB
 func initDB() {
 	var err error
 	db, err = sql.Open("mysql", "user:password@tcp(localhost:3306)/eti_asg2")
+	//db, err = sql.Open("mysql", "user:password@tcp(host.docker.internal:3306)/eti_asg2")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -272,8 +273,6 @@ func GetReviewsHandler(w http.ResponseWriter, r *http.Request) {
 		reviews = append(reviews, review)
 	}
 
-	log.Printf("Retrieved userID from session: %d", userID)
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(reviews); err != nil {
@@ -297,7 +296,6 @@ func GetReviewByIDHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Session does not contain user ID", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("Retrieved userID from session: %d", userID)
 
 	params := mux.Vars(r)
 	reviewID, ok := params["id"]

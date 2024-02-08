@@ -30,6 +30,24 @@ func init() {
 	}
 }
 
+// CORS Middleware
+func CORSMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("CORS Middleware hit")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+		// Preflight request
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // User structure
 type User struct {
 	FirstName string `json:"firstName"`
@@ -46,6 +64,7 @@ var err error
 // Establishes a connection to the MySQL database
 func connectDatabase() {
 	db, err = sql.Open("mysql", "user:password@tcp(localhost:3306)/eti_asg2")
+	//db, err = sql.Open("mysql", "user:password@tcp(host.docker.internal:3306)/eti_asg2")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -319,7 +338,27 @@ func main() {
 	workDir, _ := os.Getwd()
 	staticDir := filepath.Join(workDir, "../") // The parent directory now
 
+	// In Docker, set the static directory directly
+	//staticDir := "/root/parent/front-end"
+
+	// Routing
 	router := mux.NewRouter()
+	// Apply the CORS middleware to the router
+	router.Use(CORSMiddleware)
+
+	/*
+		// FOR DOCKER
+		jsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/javascript")
+			http.ServeFile(w, r, filepath.Join(staticDir, "js", r.URL.Path))
+		})
+		router.PathPrefix("/js/").Handler(http.StripPrefix("/js/", jsHandler))
+		cssHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/css")
+			http.ServeFile(w, r, filepath.Join(staticDir, "css", r.URL.Path))
+		})
+		router.PathPrefix("/css/").Handler(http.StripPrefix("/css/", cssHandler))
+	*/
 
 	// Custom handler for JavaScript files to ensure the correct Content-Type
 	jsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -339,14 +378,9 @@ func main() {
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
 	})
+
 	router.HandleFunc("/index.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
-	})
-	router.HandleFunc("/register.html", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(staticDir, "register.html"))
-	})
-	router.HandleFunc("/login.html", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(staticDir, "login.html"))
 	})
 	router.HandleFunc("/dashboard.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "dashboard.html"))
@@ -358,6 +392,12 @@ func main() {
 	})
 	router.HandleFunc("/settings.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "settings.html"))
+	})
+	router.HandleFunc("/register.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "register.html"))
+	})
+	router.HandleFunc("/login.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "login.html"))
 	})
 
 	// Review related
