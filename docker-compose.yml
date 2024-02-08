@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  user-service:
+    build:
+      context: .  # The context is set to the current directory, which is ETI-Assignment-2
+      dockerfile: user-service/Dockerfile  # Path to the Dockerfile from the context
+    ports:
+      - "5000:5000"  # Maps port 5000 of the container to port 5000 on the host
+
+  feedback-service:
+    build:
+      context: .  # The context is also set to the current directory for feedback-service
+      dockerfile: feedback-service/Dockerfile  # Path to the Dockerfile from the context
+    ports:
+      - "5001:5001"  # Maps port 5001 of the container to port 5001 on the host
