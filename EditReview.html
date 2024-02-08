@@ -6,7 +6,6 @@
     <script src="js/app.js"></script>
     <link rel="stylesheet" href="/css/reviews.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
                .top-nav {
     position: fixed;
@@ -152,6 +151,74 @@ h1{
 .savebutton:hover {
     background-color: #45a049;
 }
+
+.formcontainer {
+    padding-top: 10%;
+    max-width: 600px;
+    margin: 0 auto; /* Center the form */
+}
+
+.edit-review-box {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+label,
+textarea,
+p,
+div {
+    margin-bottom: 16px;
+}
+
+.back-button,
+.savebutton {
+    text-align: center;
+}
+
+/* Add some spacing between the buttons */
+.savebutton {
+    margin-left: 4%;
+}
+
+/* Center the h1 */
+h1 {
+    text-align: center;
+    font-size: 20px;
+    padding-right: 35%;
+}
+
+/* Adjusted spacing for the stars */
+label[for^="rating"] {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+/* Adjusted styles for the text */
+label[for^="rating"] span {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1;
+    margin-left: 8px; /* Adjust this value as needed */
+}
+
+/* Improved alignment for the labels */
+form div label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+/* Adjusted styles for the text */
+form div label span {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1;
+    margin-left: 8px; /* Adjust this value as needed */
+}
     </style>
     <title>Edit Review</title>
 </head>
@@ -183,7 +250,7 @@ h1{
 
   <div class="formcontainer">
     <h1 style="font-size: 20px;">Edit Review</h1>
-        <form id="editReviewForm">
+
             <label for="editedComment">Edited Comment:</label>
             <textarea id="editedComment"></textarea>
             <p>Select Rating:</p>
@@ -205,7 +272,6 @@ h1{
             </div>
             <button class="back-button" onclick="window.location.href = 'ViewReviews.html';">Back to Reviews</button>
             <button class="savebutton" onclick="saveEditedReview()">Save Changes</button>
-        </form>
     </div>
 
 <script>
