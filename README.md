@@ -13,7 +13,15 @@ Before proceeding, ensure the database have the necessary tables. SQL script is 
 4. Run `go run main.go` in terminal for feedback-service to be able to access the Review system in the web front-end
 5. Open web browser, type in URL - `localhost:5000` and it should show the index page
 
+## Architecture
 
+The platform follows a microservices architecture to enhance scalability, maintainability, and overall efficiency. Here's an overview of the key components:
+
+1. **User Service:** Manages user authentication, authorization, and profile information.
+2. **Payment Service:** Handles secure payment transactions and integrates with various payment gateways.
+3. **Feedback Service:** Collects and analyzes user feedback to improve the platform and course offerings.
+4. **Course Management Service:** Manages course content, including creation, updates, and version control.
+5. **Enrollment Service:** Facilitates user enrollment in courses and ensures a smooth enrollment workflow.
 
 
 
