@@ -371,11 +371,6 @@ func main() {
 		http.ServeFile(w, r, filepath.Join(staticDir, "EditReview.html"))
 	})
 
-<<<<<<< HEAD
-	router.HandleFunc("/payment.html", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(staticDir, "payment.html"))
-	})
-=======
 	// Courses related
 	router.HandleFunc("/courses.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "courses.html"))
@@ -385,7 +380,6 @@ func main() {
 	})
 
 	// Payment related
->>>>>>> e281b33bc955ddfbdd78ca88e12d209e26573ee5
 
 	// API routes
 	apiRouter := router.PathPrefix("/api").Subrouter()
