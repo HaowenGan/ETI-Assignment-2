@@ -45,7 +45,7 @@ var err error
 
 // Establishes a connection to the MySQL database
 func connectDatabase() {
-	db, err = sql.Open("mysql", "root:Joeykkh101204@tcp(localhost:3306)/eti_asg2")
+	db, err = sql.Open("mysql", "user:password@tcp(localhost:3306)/eti_asg2")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -370,13 +370,13 @@ func main() {
 	router.HandleFunc("/EditReview.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "EditReview.html"))
 	})
-	router.HandleFunc("/Enrollment.html", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(staticDir, "Enrollment.html"))
-	})
 
 	// Courses related
 	router.HandleFunc("/courses.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "courses.html"))
+	})
+	router.HandleFunc("/Enrollment.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "Enrollment.html"))
 	})
 
 	// Payment related

@@ -7,12 +7,17 @@
 </head>
 <body>
     <h1>Course Enrollment</h1>
+    <div class="profile-dropdown">
+        <!-- User Profile Dropdown -->
+        <div class="relative">
+          <button class="flex items-center space-x-2 cursor-pointer" id="userMenuButton" aria-expanded="true" aria-haspopup="true">
+            <img src="https://placehold.co/32x32" alt="User profile placeholder image" class="rounded-full">
+            <span id="userName"></span>
+            <span id="userType"></span>
+            <i class="fas fa-chevron-down text-gray-500"></i>
+          </button>
     
     <h2>Enroll in Courses</h2>
-    <form id="enrollForm">
-        <label for="userID">User ID:</label>
-        <input type="text" id="userID" name="userID"><br><br>
-        
         <label for="courseIDs">Course IDs (comma-separated):</label>
         <input type="text" id="courseIDs" name="courseIDs"><br><br>
         
@@ -32,6 +37,16 @@
     <div id="userCourses"></div>
     
     <script>
+        // Fetch current user's details
+fetch('/api/current-user')
+  .then(response => response.json())
+  .then(data => {
+    // Update HTML content with user's details
+    document.getElementById('userName').textContent = data.firstName + ' ' + data.lastName;
+    document.getElementById('userType').textContent = data.usertype;
+  })
+  .catch(error => console.error('Error fetching current user:', error));
+
         document.getElementById("enrollForm").addEventListener("submit", function(event) {
             event.preventDefault();
             var formData = new FormData(event.target);
@@ -39,7 +54,7 @@
                 method: "POST",
                 body: JSON.stringify({
                     user_id: formData.get("userID"),
-                    course_ids: formData.get("courseIDs").split(",").map(Number)
+                    course_id: formData.get("courseID").split(",").map(Number)
                 }),
                 headers: {
                     "Content-Type": "application/json"
@@ -81,6 +96,7 @@
                 alert(error.message);
             });
         });
+        
     </script>
 </body>
 </html>
