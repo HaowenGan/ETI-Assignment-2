@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Enrollment</title>
+</head>
+<body>
+    <h1>Course Enrollment</h1>
+    
+    <h2>Enroll in Courses</h2>
+    <form id="enrollForm">
+        <label for="userID">User ID:</label>
+        <input type="text" id="userID" name="userID"><br><br>
+        
+        <label for="courseIDs">Course IDs (comma-separated):</label>
+        <input type="text" id="courseIDs" name="courseIDs"><br><br>
+        
+        <button type="submit">Enroll</button>
+    </form>
+    
+    <hr>
+    
+    <h2>User Courses</h2>
+    <form id="getUserCoursesForm">
+        <label for="userIDCourses">User ID:</label>
+        <input type="text" id="userIDCourses" name="userIDCourses"><br><br>
+        
+        <button type="submit">Get User Courses</button>
+    </form>
+    
+    <div id="userCourses"></div>
+    
+    <script>
+        document.getElementById("enrollForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var formData = new FormData(event.target);
+            fetch("/enroll", {
+                method: "POST",
+                body: JSON.stringify({
+                    user_id: formData.get("userID"),
+                    course_ids: formData.get("courseIDs").split(",").map(Number)
+                }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to enroll user in courses");
+                }
+                return response.text();
+            })
+            .then(message => {
+                alert(message);
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+        });
+
+        document.getElementById("getUserCoursesForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var userID = document.getElementById("userIDCourses").value;
+            fetch("/user/" + userID)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to retrieve user courses");
+                }
+                return response.json();
+            })
+            .then(data => {
+                var coursesList = "<ul>";
+                data.forEach(course => {
+                    coursesList += "<li>" + course.title + "</li>";
+                });
+                coursesList += "</ul>";
+                document.getElementById("userCourses").innerHTML = coursesList;
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+        });
+    </script>
+</body>
+</html>
