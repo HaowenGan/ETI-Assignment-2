@@ -134,6 +134,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Println("Session saved for user:", user.Username)
 
+		log.Printf("Session saved with userID: %d", id)
 		// Send a response to the client that authentication was successful
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("User logged in successfully"))
@@ -215,6 +216,103 @@ func logoutUser(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User logged out successfully"))
 }
 
+// Update the current user's profile
+func updateUserProfile(w http.ResponseWriter, r *http.Request) {
+	session, err := store.Get(r, "user-session")
+	if err != nil || !session.Values["authenticated"].(bool) {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var user User
+	err = json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userID := session.Values["userID"].(int)
+
+	// Build SQL query dynamically based on provided fields
+	query := "UPDATE users SET "
+	queryParams := []interface{}{}
+	if user.FirstName != "" {
+		query += "firstName = ?, "
+		queryParams = append(queryParams, user.FirstName)
+	}
+	if user.LastName != "" {
+		query += "lastName = ?, "
+		queryParams = append(queryParams, user.LastName)
+	}
+	if user.Email != "" {
+		query += "email = ?, "
+		queryParams = append(queryParams, user.Email)
+	}
+
+	// Remove trailing comma and space
+	query = query[:len(query)-2]
+	query += " WHERE id = ?"
+	queryParams = append(queryParams, userID)
+
+	_, err = db.Exec(query, queryParams...)
+	if err != nil {
+		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Profile updated successfully"))
+}
+
+func changeUserPassword(w http.ResponseWriter, r *http.Request) {
+	session, err := store.Get(r, "user-session")
+	if err != nil || !session.Values["authenticated"].(bool) {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var payload struct {
+		CurrentPassword string `json:"currentPassword"`
+		NewPassword     string `json:"newPassword"`
+	}
+	err = json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userID := session.Values["userID"].(int)
+	var currentHashedPassword string
+	err = db.QueryRow("SELECT password FROM users WHERE id = ?", userID).Scan(&currentHashedPassword)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// Verify current password
+	if bcrypt.CompareHashAndPassword([]byte(currentHashedPassword), []byte(payload.CurrentPassword)) != nil {
+		http.Error(w, "Invalid current password", http.StatusUnauthorized)
+		return
+	}
+
+	// Hash new password
+	newHashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Error hashing password", http.StatusInternalServerError)
+		return
+	}
+
+	// Update password in database
+	_, err = db.Exec("UPDATE users SET password = ? WHERE id = ?", newHashedPassword, userID)
+	if err != nil {
+		http.Error(w, "Failed to update password", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Password updated successfully"))
+}
+
 func main() {
 	connectDatabase()
 	defer db.Close()
@@ -250,16 +348,44 @@ func main() {
 	router.HandleFunc("/login.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "login.html"))
 	})
-	router.HandleFunc("/MakeReview.html", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(staticDir, "MakeReview.html"))
-	})
 	router.HandleFunc("/dashboard.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "dashboard.html"))
 	})
 
+	// User related
+	router.HandleFunc("/profile.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "profile.html"))
+	})
+	router.HandleFunc("/settings.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "settings.html"))
+	})
+
+	// Review related
+	router.HandleFunc("/MakeReview.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "MakeReview.html"))
+	})
+	router.HandleFunc("/ViewReviews.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "ViewReviews.html"))
+	})
+	router.HandleFunc("/EditReview.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "EditReview.html"))
+	})
+
+<<<<<<< HEAD
 	router.HandleFunc("/payment.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticDir, "payment.html"))
 	})
+=======
+	// Courses related
+	router.HandleFunc("/courses.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "courses.html"))
+	})
+	router.HandleFunc("/Enrollment.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticDir, "Enrollment.html"))
+	})
+
+	// Payment related
+>>>>>>> e281b33bc955ddfbdd78ca88e12d209e26573ee5
 
 	// API routes
 	apiRouter := router.PathPrefix("/api").Subrouter()
@@ -267,6 +393,8 @@ func main() {
 	apiRouter.HandleFunc("/login", loginUser).Methods("POST")
 	apiRouter.HandleFunc("/current-user", getCurrentUser).Methods("GET")
 	apiRouter.HandleFunc("/logout", logoutUser).Methods("POST")
+	apiRouter.HandleFunc("/update-profile", updateUserProfile).Methods("POST")
+	apiRouter.HandleFunc("/change-password", changeUserPassword).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":5000", router))
 }

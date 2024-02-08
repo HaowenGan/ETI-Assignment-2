@@ -1,0 +1,84 @@
+<!-- Ho Jun Xiong / S10222060 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/css/course.css">
+    <script src="/js/course.js"></script>
+    <title>Course Management</title>
+</head>
+<body>
+    <h1>Course Management</h1>
+
+    <h2>List of Courses</h2>
+<table class="course-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Content</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody id="courseListBody"></tbody>
+</table>   
+
+    <hr>
+    <!-- Create Course Form -->
+    <h2>Create Course</h2>
+    <form id="createCourseForm">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required>
+        <br>
+        <label for="content">Content:</label>
+        <textarea id="content" name="content" required></textarea>
+        <br>
+        <label for="price">Price:</label>
+        <input type="number" id="price" name="price" step="0.01" required>
+        <br>
+        <label for="sectionTitle">Section Title:</label>
+        <input type="text" id="sectionTitle" name="sectionTitle">
+        <br>
+        <label for="sectionContent">Section Content:</label>
+        <textarea id="sectionContent" name="sectionContent"></textarea>
+        <br>
+        <button type="button" onclick="createCourse()">Create Course</button>
+    </form>
+
+    <hr>
+
+    <!-- Update Course Form -->
+    <h2>Update Course</h2>
+    <form id="updateCourseForm">
+        <label for="updateCourseID">Course ID:</label>
+        <input type="number" id="updateCourseID" name="updateCourseID" required>
+        <br>
+        <label for="updateTitle">Title:</label>
+        <input type="text" id="updateTitle" name="updateTitle">
+        <br>
+        <label for="updateContent">Content:</label>
+        <textarea id="updateContent" name="updateContent"></textarea>
+        <br>
+        <label for="updateSectionTitle">Section Title:</label>
+        <input type="text" id="updateSectionTitle" name="updateSectionTitle">
+        <br>
+        <label for="updateSectionContent">Section Content:</label>
+        <textarea id="updateSectionContent" name="updateSectionContent"></textarea>
+        <br>
+        <button type="button" onclick="updateCourse()">Update Course</button>
+    </form>
+
+    <hr>
+
+    <!-- Delete Course Form -->
+    <h2>Delete Course</h2>
+    <form id="deleteCourseForm">
+        <label for="deleteCourseID">Course ID:</label>
+        <input type="number" id="deleteCourseID" name="deleteCourseID" required>
+        <br>
+        <button type="button" onclick="deleteCourse()">Delete Course</button>
+    </form>
+</body>
+</html>
